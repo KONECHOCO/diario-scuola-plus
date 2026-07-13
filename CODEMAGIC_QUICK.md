@@ -29,11 +29,27 @@ Il workflow usa `$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` — la stessa variabile di
 
 Se già presente in Codemagic → Team settings → Environment variables, **non serve rifare nulla**.
 
-## 4. iOS (opzionale, per App Store)
+## 4. iOS (App Store / TestFlight)
 
-1. **Integrations** → App Store Connect (se non già collegato)
-2. Avvia workflow `ios-release` — crea `ios/` automaticamente su Mac
-3. Aggiorna `APP_STORE_APP_ID` in `codemagic.yaml` dopo aver creato l'app su App Store Connect
+### Errore: "No matching profiles found for bundle identifier"
+
+Significa che Codemagic non ha certificato/provisioning profile per `com.diarioscuolaplus.app`.
+
+**Soluzione automatica (consigliata):** il workflow `ios-release` ora esegue:
+`app-store-connect fetch-signing-files --create` usando l'integrazione App Store Connect.
+
+**Requisiti:**
+1. **Integrations** → App Store Connect → nome esatto: **`Ikonet Solutions`**
+2. La API key deve appartenere al team Apple Developer dove esiste il Bundle ID `com.diarioscuolaplus.app` (account **INZA KONE**)
+3. Ruolo API key: **Admin** o **App Manager** con accesso a Certificates, Identifiers & Profiles
+
+**Soluzione manuale (alternativa):**
+1. Codemagic → **Team settings** → **Code signing identities** → **iOS provisioning profiles**
+2. Clicca **Fetch profiles** (con API key collegata)
+3. Seleziona profilo **App Store** per `com.diarioscuolaplus.app`
+4. Assegna reference name es. `diario_appstore`
+
+Poi avvia di nuovo workflow **`ios-release`**.
 
 ## 5. Prima build
 

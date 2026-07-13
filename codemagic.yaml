@@ -56,13 +56,11 @@ workflows:
     integrations:
       app_store_connect: "Ikonet Solutions"
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.diarioscuolaplus.app
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         APP_STORE_APPLE_ID: "6790534929"
+        BUNDLE_ID: "com.diarioscuolaplus.app"
       node: 20
       xcode: latest
       cocoapods: default
@@ -104,8 +102,23 @@ workflows:
           fi
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
-      - name: Apply iOS signing profiles
-        script: xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Verify iOS bundle identifier
+        script: |
+          DETECTED=$(xcode-project detect-bundle-id --project ios/App/App.xcodeproj)
+          echo "Bundle ID rilevato: $DETECTED"
+          if [ "$DETECTED" != "$BUNDLE_ID" ]; then
+            echo "ERRORE: bundle ID atteso $BUNDLE_ID, trovato $DETECTED"
+            exit 1
+          fi
+      - name: Set up code signing
+        script: |
+          set -eo pipefail
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles --project ios/App/App.xcodeproj
       - name: Build IPA
         script: |
           cd ios/App
