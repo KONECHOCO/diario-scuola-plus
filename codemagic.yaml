@@ -54,7 +54,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: codemagic
+      app_store_connect: "Ikonet Solutions"
     environment:
       ios_signing:
         distribution_type: app_store
@@ -62,7 +62,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_APP_ID: "0000000000"
+        APP_STORE_APPLE_ID: "0000000000"
       node: 20
       xcode: latest
       cocoapods: default
@@ -94,6 +94,18 @@ workflows:
         script: |
           cd ios/App
           pod install
+      - name: Set build number
+        script: |
+          if [ -n "$APP_STORE_APPLE_ID" ] && [ "$APP_STORE_APPLE_ID" != "0000000000" ]; then
+            LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+            BUILD_NUMBER=$((LATEST + 1))
+          else
+            BUILD_NUMBER=$BUILD_NUMBER
+          fi
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
+      - name: Apply iOS signing profiles
+        script: xcode-project use-profiles --project ios/App/App.xcodeproj
       - name: Build IPA
         script: |
           cd ios/App
@@ -107,8 +119,7 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - Beta Tester
+        expire_build_submitted_for_review: true
 
   # ─────────────────────────────────────────────
   # WEB — Privacy policy + app demo (Vercel alt.)
