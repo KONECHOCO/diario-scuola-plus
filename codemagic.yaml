@@ -56,9 +56,8 @@ workflows:
     integrations:
       app_store_connect: "Ikonet Solutions"
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.diarioscuolaplus.app
+      groups:
+        - app_store_credentials
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -113,6 +112,14 @@ workflows:
             echo "ERRORE: bundle ID atteso $BUNDLE_ID, trovato $DETECTED"
             exit 1
           fi
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE
+      - name: Set up signing keychain
+        script: |
+          keychain initialize
+          keychain add-certificates
       - name: Apply provisioning profiles
         script: xcode-project use-profiles --project ios/App/App.xcodeproj
       - name: Build IPA
