@@ -56,6 +56,8 @@ workflows:
     integrations:
       app_store_connect: "Ikonet Solutions"
     environment:
+      groups:
+        - app_store_credentials
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -110,22 +112,17 @@ workflows:
             echo "ERRORE: bundle ID atteso $BUNDLE_ID, trovato $DETECTED"
             exit 1
           fi
-      - name: Set up code signing
+      - name: Fetch signing files
         script: |
-          set -eo pipefail
-          keychain initialize
-          CERT_KEY_PATH="/tmp/ios_distribution_key.pem"
-          if [ -n "$CM_CERTIFICATE_PRIVATE_KEY" ]; then
-            echo "$CM_CERTIFICATE_PRIVATE_KEY" | base64 --decode > "$CERT_KEY_PATH"
-          else
-            openssl genrsa -out "$CERT_KEY_PATH" 2048
-          fi
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key=@file:"$CERT_KEY_PATH" \
             --create
+      - name: Set up signing keychain
+        script: |
+          keychain initialize
           keychain add-certificates
-          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles --project ios/App/App.xcodeproj
       - name: Build IPA
         script: |
           cd ios/App
