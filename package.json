@@ -13,7 +13,8 @@
     "deploy:vercel": "npm run build && npx vercel --prod",
     "deploy:preview": "npm run build && npx vercel",
     "assets:generate": "npx @capacitor/assets generate --iconBackgroundColor \"#2563eb\" --iconBackgroundColorDark \"#1e3a8a\" --splashBackgroundColor \"#2563eb\" --splashBackgroundColorDark \"#1e3a8a\"",
-    "mobile:setup": "npm run build && npx cap add android && npx cap add ios && npm run assets:generate && npx cap sync"
+    "mobile:setup": "npm run build && npx cap add android && npx cap add ios && npm run assets:generate && npx cap sync",
+    "screenshots:store": "node scripts/capture-appstore-screenshots.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.2.0",
@@ -41,6 +42,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "playwright": "^1.61.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",

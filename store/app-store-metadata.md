@@ -49,9 +49,10 @@ https://diarioscuolaplus.app/privacy-policy.html
 mailto:support@diarioscuolaplus.app
 
 ## Screenshot richiesti
-- iPhone 6.7" (1290 x 2796) - minimo 3
-- iPhone 6.5" (1284 x 2778) - minimo 3
-- iPad Pro 12.9" (2048 x 2732) - se supporti iPad
+- iPhone 6.5" (1284 × 2778) — minimo 3 — cartella `store/screenshots/iphone-6.5/`
+- iPad Pro 12.9" (2048 × 2732) — minimo 3 — cartella `store/screenshots/ipad-12.9/`
+
+Generazione: `npm run dev` + `npm run screenshots:store`
 
 ## Note per App Review
 - L'app usa il microfono solo per la funzione "Registrazioni lezioni" su richiesta dell'utente
