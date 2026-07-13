@@ -1,0 +1,51 @@
+# Codemagic — Setup rapido (account rebichocol@gmail.com)
+
+Repository GitHub: **https://github.com/KONECHOCO/diario-scuola-plus**
+
+## 1. Aggiungi l'app (2 minuti)
+
+1. Vai su [codemagic.io/apps](https://codemagic.io/apps)
+2. Clicca **Add application**
+3. Seleziona **GitHub** → repository **`KONECHOCO/diario-scuola-plus`**
+4. Codemagic rileva automaticamente `codemagic.yaml`
+5. Abilita i 3 workflow:
+   - `android-release`
+   - `ios-release`
+   - `web-static`
+
+## 2. Keystore Android (come i tuoi altri progetti)
+
+1. **Team settings** → **Code signing identities** → **Android keystores**
+2. Carica un keystore con reference name: **`diario`**
+   (stesso stile di `agendadigitale` e `agendadigitale-pro`)
+3. Se non ne hai uno, genera:
+   ```bash
+   keytool -genkey -v -keystore diario.keystore -alias diario -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+## 3. Google Play (già configurato per altri progetti?)
+
+Il workflow usa `$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` — la stessa variabile di **AGENDADIGITALE**.
+
+Se già presente in Codemagic → Team settings → Environment variables, **non serve rifare nulla**.
+
+## 4. iOS (opzionale, per App Store)
+
+1. **Integrations** → App Store Connect (se non già collegato)
+2. Avvia workflow `ios-release` — crea `ios/` automaticamente su Mac
+3. Aggiorna `APP_STORE_APP_ID` in `codemagic.yaml` dopo aver creato l'app su App Store Connect
+
+## 5. Prima build
+
+1. Su Codemagic → app **diario-scuola-plus**
+2. Clicca **Start new build**
+3. Scegli workflow **`android-release`**
+4. Scarica il `.aab` dagli artifacts oppure pubblica su Play Store (track: internal)
+
+## Workflow disponibili
+
+| Workflow | Macchina | Output |
+|----------|----------|--------|
+| `android-release` | linux_x2 | `.aab` per Play Store |
+| `ios-release` | mac_mini_m2 | `.ipa` per TestFlight |
+| `web-static` | linux_x2 | `dist/` con privacy policy |
