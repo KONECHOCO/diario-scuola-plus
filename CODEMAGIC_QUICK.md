@@ -33,23 +33,21 @@ Se già presente in Codemagic → Team settings → Environment variables, **non
 
 ### Errore: "No matching profiles found for bundle identifier"
 
-Significa che Codemagic non ha certificato/provisioning profile per `com.diarioscuolaplus.app`.
+Significa che Codemagic non ha ancora un **provisioning profile App Store** per `com.diarioscuolaplus.app`.
 
-**Soluzione automatica (consigliata):** il workflow `ios-release` ora esegue:
-`app-store-connect fetch-signing-files --create` usando l'integrazione App Store Connect.
+**Soluzione (2 minuti, come Converter/Agenda Digitale):**
 
-**Requisiti:**
-1. **Integrations** → App Store Connect → nome esatto: **`Ikonet Solutions`**
-2. La API key deve appartenere al team Apple Developer dove esiste il Bundle ID `com.diarioscuolaplus.app` (account **INZA KONE**)
-3. Ruolo API key: **Admin** o **App Manager** con accesso a Certificates, Identifiers & Profiles
-
-**Soluzione manuale (alternativa):**
-1. Codemagic → **Team settings** → **Code signing identities** → **iOS provisioning profiles**
-2. Clicca **Fetch profiles** (con API key collegata)
+1. [codemagic.io](https://codemagic.io) → **Team settings** → **codemagic.yaml settings** → **Code signing identities**
+2. Sezione **iOS provisioning profiles** → **Fetch profiles** (usa integrazione **Ikonet Solutions**)
 3. Seleziona profilo **App Store** per `com.diarioscuolaplus.app`
-4. Assegna reference name es. `diario_appstore`
+4. Reference name suggerito: `diario_appstore`
+5. Avvia workflow **`ios-release`**
 
-Poi avvia di nuovo workflow **`ios-release`**.
+Se il profilo non compare in Fetch profiles, crealo prima su [developer.apple.com](https://developer.apple.com/account/resources/profiles/list) (tipo **App Store**, bundle `com.diarioscuolaplus.app`), poi ripeti Fetch profiles.
+
+### Errore: "Cannot save Signing Certificates without certificate private key"
+
+Se usi `fetch-signing-files --create`, aggiungi al gruppo `app_store_credentials` la variabile **`CERTIFICATE_PRIVATE_KEY`** (chiave privata del certificato Distribution esistente). Senza questa variabile la build fallisce quando il bundle ID è nuovo.
 
 ## 5. Prima build
 
