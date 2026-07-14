@@ -57,8 +57,10 @@ workflows:
       app_store_connect: "KONE INZA"
     environment:
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.diarioscuolaplus.app
+        provisioning_profiles:
+          - diario_appstore
+        certificates:
+          - diario_distribution
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
