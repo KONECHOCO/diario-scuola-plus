@@ -1,65 +1,59 @@
-# Codemagic — Setup rapido (account rebichocol@gmail.com)
+# Codemagic — Setup rapido (account personale rebichocol@gmail.com)
 
 Repository GitHub: **https://github.com/KONECHOCO/diario-scuola-plus**
 
-## 1. Aggiungi l'app (2 minuti)
+Account Apple Developer: **INZA KONE** (profilo personale)
 
-1. Vai su [codemagic.io/apps](https://codemagic.io/apps)
-2. Clicca **Add application**
-3. Seleziona **GitHub** → repository **`KONECHOCO/diario-scuola-plus`**
-4. Codemagic rileva automaticamente `codemagic.yaml`
-5. Abilita i 3 workflow:
-   - `android-release`
-   - `ios-release`
-   - `web-static`
+## 1. Aggiungi l'app
 
-## 2. Keystore Android (come i tuoi altri progetti)
+1. [codemagic.io/apps](https://codemagic.io/apps)
+2. **Add application** → GitHub → **`KONECHOCO/diario-scuola-plus`**
+3. Workflow da `codemagic.yaml`: `android-release`, `ios-release`, `web-static`
 
-1. **Team settings** → **Code signing identities** → **Android keystores**
-2. Carica un keystore con reference name: **`diario`**
-   (stesso stile di `agendadigitale` e `agendadigitale-pro`)
-3. Se non ne hai uno, genera:
-   ```bash
-   keytool -genkey -v -keystore diario.keystore -alias diario -keyalg RSA -keysize 2048 -validity 10000
-   ```
+## 2. Integrazione App Store Connect (account personale)
 
-## 3. Google Play (già configurato per altri progetti?)
+Su Codemagic **profilo personale** (non Team):
 
-Il workflow usa `$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` — la stessa variabile di **AGENDADIGITALE**.
+1. Icona profilo in alto a destra → **Personal account settings**
+2. **Integrations** → **Developer Portal** → **Manage keys**
+3. Aggiungi la API key del tuo account **INZA KONE** (da App Store Connect → Users and Access → Integrations → API)
+4. Nome integrazione in Codemagic: **`KONE INZA`** (deve coincidere con `codemagic.yaml`)
 
-Se già presente in Codemagic → Team settings → Environment variables, **non serve rifare nulla**.
+API key già presenti su INZA KONE: `KONE INZA`, `Codemagic CasaControl`, ecc.
 
-## 4. iOS (App Store / TestFlight)
+## 3. iOS — Provisioning profile (account personale)
 
-### Errore: "No matching profiles found for bundle identifier"
+Il profilo **Diario Scuola Plus App Store** esiste già su Apple Developer per `com.diarioscuolaplus.app`.
 
-Significa che Codemagic non ha ancora un **provisioning profile App Store** per `com.diarioscuolaplus.app`.
+Su Codemagic profilo personale:
 
-**Soluzione (2 minuti, come Converter/Agenda Digitale):**
-
-1. [codemagic.io](https://codemagic.io) → **Team settings** → **codemagic.yaml settings** → **Code signing identities**
-2. Sezione **iOS provisioning profiles** → **Fetch profiles** (usa integrazione **Ikonet Solutions**)
+1. **Personal account settings** → **codemagic.yaml settings** → **Code signing identities**
+2. **iOS provisioning profiles** → **Fetch profiles**
 3. Seleziona profilo **App Store** per `com.diarioscuolaplus.app`
-4. Reference name suggerito: `diario_appstore`
+4. Reference name: `diario_appstore`
 5. Avvia workflow **`ios-release`**
 
-Se il profilo non compare in Fetch profiles, crealo prima su [developer.apple.com](https://developer.apple.com/account/resources/profiles/list) (tipo **App Store**, bundle `com.diarioscuolaplus.app`), poi ripeti Fetch profiles.
+### Errori comuni
 
-### Errore: "Cannot save Signing Certificates without certificate private key"
+| Errore | Causa | Fix |
+|--------|-------|-----|
+| No matching profiles found | Profilo non caricato su Codemagic | Fetch profiles (passo 3 sopra) |
+| Cannot save Signing Certificates without certificate private key | Manca `CERTIFICATE_PRIVATE_KEY` | Usa Fetch profiles manuale, non `fetch-signing-files --create` |
+| Integrazione non trovata | Nome sbagliato in yaml | Rinomina integrazione in Codemagic o aggiorna `app_store_connect:` in yaml |
 
-Se usi `fetch-signing-files --create`, aggiungi al gruppo `app_store_credentials` la variabile **`CERTIFICATE_PRIVATE_KEY`** (chiave privata del certificato Distribution esistente). Senza questa variabile la build fallisce quando il bundle ID è nuovo.
+## 4. Android keystore
 
-## 5. Prima build
+1. **Personal account settings** → **Code signing identities** → **Android keystores**
+2. Carica keystore con reference name: **`diario`**
 
-1. Su Codemagic → app **diario-scuola-plus**
-2. Clicca **Start new build**
-3. Scegli workflow **`android-release`**
-4. Scarica il `.aab` dagli artifacts oppure pubblica su Play Store (track: internal)
+## 5. Google Play
 
-## Workflow disponibili
+Variabile `GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` — se già configurata sul tuo account Codemagic per altri progetti, riutilizzala a livello app o personale.
 
-| Workflow | Macchina | Output |
-|----------|----------|--------|
-| `android-release` | linux_x2 | `.aab` per Play Store |
-| `ios-release` | mac_mini_m2 | `.ipa` per TestFlight |
-| `web-static` | linux_x2 | `dist/` con privacy policy |
+## Workflow
+
+| Workflow | Output |
+|----------|--------|
+| `android-release` | `.aab` Play Store |
+| `ios-release` | `.ipa` TestFlight |
+| `web-static` | `dist/` privacy policy |
