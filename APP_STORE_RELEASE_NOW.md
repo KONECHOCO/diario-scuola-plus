@@ -56,6 +56,8 @@ Nota build `6a567b38ea52e812bbf12cbf`: la firma iOS e l'applicazione dei provisi
 
 Nota build `6a567c252e9afe57d0686871`: il workspace viene trovato e Xcode avvia l'archive. In caso di ulteriore exit code 65, il workflow ora usa `--verbose --disable-xcpretty` per mostrare l'errore Xcode completo nel log Codemagic.
 
+Nota build `6a567d3d141a13834d4ce255`: il log completo mostra che il certificato `IkonetSolutions` e invalido per Apple. Il workflow ora usa `lexiguess_distribution`, certificato production dello stesso team `INZA KONE`.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml

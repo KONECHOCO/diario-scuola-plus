@@ -60,7 +60,7 @@ workflows:
         provisioning_profiles:
           - diario_appstore
         certificates:
-          - IkonetSolutions
+          - lexiguess_distribution
       vars:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
