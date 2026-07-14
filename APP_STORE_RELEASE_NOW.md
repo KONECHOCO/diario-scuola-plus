@@ -60,6 +60,8 @@ Nota build `6a567d3d141a13834d4ce255`: il log completo mostra che il certificato
 
 Nota build `6a567f4775dab0e078743695`: il certificato `lexiguess_distribution` viene caricato, ma il profilo `diario_appstore` non include quel certificato. Serve rigenerare su Apple Developer Portal il provisioning profile App Store per `com.diarioscuolaplus.app` includendo il certificato valido, poi rifare `Fetch profiles` in Codemagic con reference `diario_appstore`.
 
+Nota profilo aggiornato: Codemagic non sovrascrive `diario_appstore`, quindi il profilo rigenerato e stato scaricato come `diario_appstore_v2` e il workflow iOS usa quella reference.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml
