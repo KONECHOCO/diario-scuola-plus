@@ -54,7 +54,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: "KONE INZA"
+      app_store_connect: "Ikonet Solutions"
     environment:
       ios_signing:
         provisioning_profiles:

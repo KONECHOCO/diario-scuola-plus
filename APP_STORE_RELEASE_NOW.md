@@ -8,6 +8,7 @@ Stato al 14 luglio 2026:
 - Codemagic app ID: `6a553e90c08f38b08faefb5e`
 - Workflow: `ios-release`
 - Ultima build vista: `6a567218d601bb6cd9bf666a`, failed
+- App Store Connect integration: `Ikonet Solutions`
 
 ## Blocco attuale
 

@@ -17,9 +17,9 @@ Su Codemagic **profilo personale** (non Team):
 1. Icona profilo in alto a destra → **Personal account settings**
 2. **Integrations** → **Developer Portal** → **Manage keys**
 3. Aggiungi la API key del tuo account **INZA KONE** (da App Store Connect → Users and Access → Integrations → API)
-4. Nome integrazione in Codemagic: **`KONE INZA`** (deve coincidere con `codemagic.yaml`)
+4. Nome integrazione in Codemagic: **`Ikonet Solutions`** (deve coincidere con `codemagic.yaml`)
 
-API key già presenti su INZA KONE: `KONE INZA`, `Codemagic CasaControl`, ecc.
+API key già presenti su INZA KONE: `Ikonet Solutions`, `Codemagic CasaControl`, ecc.
 
 ## 3. iOS — Provisioning profile (account personale)
 
