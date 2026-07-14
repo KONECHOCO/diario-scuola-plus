@@ -31,8 +31,8 @@ Su Codemagic profilo personale:
 2. **iOS provisioning profiles** → **Fetch profiles**
 3. Seleziona profilo **App Store** per `com.diarioscuolaplus.app`
 4. Reference name profilo: **`diario_appstore`**
-5. Tab **iOS certificates** → **Fetch certificate** (Distribution) oppure **Generate certificate**
-6. Reference name certificato: **`diario_distribution`**
+5. Tab **iOS certificates** → verifica il certificato Distribution esistente
+6. Reference name certificato: **`IkonetSolutions`**
 7. Avvia workflow **`ios-release`**
 
 ### Errori comuni

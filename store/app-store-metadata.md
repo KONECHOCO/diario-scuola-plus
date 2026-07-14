@@ -46,7 +46,7 @@ Istruzione
 https://diarioscuolaplus.app/privacy-policy.html
 
 ## Support URL
-mailto:support@diarioscuolaplus.app
+https://diarioscuolaplus.app/support.html
 
 ## Screenshot richiesti
 - iPhone 6.5" (1284 × 2778) — minimo 3 — cartella `store/screenshots/iphone-6.5/`

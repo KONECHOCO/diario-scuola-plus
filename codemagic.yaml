@@ -60,7 +60,7 @@ workflows:
         provisioning_profiles:
           - diario_appstore
         certificates:
-          - diario_distribution
+          - IkonetSolutions
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -156,6 +156,7 @@ workflows:
         script: |
           test -f dist/privacy-policy.html || (echo "privacy-policy.html mancante" && exit 1)
           test -f dist/terms.html || (echo "terms.html mancante" && exit 1)
-          echo "OK: pagine legali presenti in dist/"
+          test -f dist/support.html || (echo "support.html mancante" && exit 1)
+          echo "OK: pagine legali/supporto presenti in dist/"
     artifacts:
       - dist/**/*
