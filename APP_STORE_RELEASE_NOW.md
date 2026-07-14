@@ -62,6 +62,8 @@ Nota build `6a567f4775dab0e078743695`: il certificato `lexiguess_distribution` v
 
 Nota profilo aggiornato: Codemagic non sovrascrive `diario_appstore`, quindi il profilo rigenerato e stato scaricato come `diario_appstore_v2` e il workflow iOS usa quella reference.
 
+Nota profilo corretto: il profilo Apple e stato salvato sul certificato Distribution con scadenza 2027/06/29 e riscaricato in Codemagic come `diario_appstore_v3`.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml
