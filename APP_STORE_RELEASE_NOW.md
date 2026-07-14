@@ -54,6 +54,8 @@ Rilancia in Codemagic:
 
 Nota build `6a567b38ea52e812bbf12cbf`: la firma iOS e l'applicazione dei provisioning profiles sono passate. Il blocco successivo era il path workspace nel comando `Build IPA`, corretto usando `App.xcworkspace` dopo `cd ios/App`.
 
+Nota build `6a567c252e9afe57d0686871`: il workspace viene trovato e Xcode avvia l'archive. In caso di ulteriore exit code 65, il workflow ora usa `--verbose --disable-xcpretty` per mostrare l'errore Xcode completo nel log Codemagic.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml
