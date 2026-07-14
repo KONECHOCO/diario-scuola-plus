@@ -52,6 +52,8 @@ Rilancia in Codemagic:
 - branch: `main`
 - workflow: `Diario Scuola Plus - iOS` / `ios-release`
 
+Nota build `6a567b38ea52e812bbf12cbf`: la firma iOS e l'applicazione dei provisioning profiles sono passate. Il blocco successivo era il path workspace nel comando `Build IPA`, corretto usando `App.xcworkspace` dopo `cd ios/App`.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml
