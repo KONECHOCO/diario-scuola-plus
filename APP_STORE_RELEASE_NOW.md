@@ -58,6 +58,8 @@ Nota build `6a567c252e9afe57d0686871`: il workspace viene trovato e Xcode avvia 
 
 Nota build `6a567d3d141a13834d4ce255`: il log completo mostra che il certificato `IkonetSolutions` e invalido per Apple. Il workflow ora usa `lexiguess_distribution`, certificato production dello stesso team `INZA KONE`.
 
+Nota build `6a567f4775dab0e078743695`: il certificato `lexiguess_distribution` viene caricato, ma il profilo `diario_appstore` non include quel certificato. Serve rigenerare su Apple Developer Portal il provisioning profile App Store per `com.diarioscuolaplus.app` includendo il certificato valido, poi rifare `Fetch profiles` in Codemagic con reference `diario_appstore`.
+
 Se la build passa, Codemagic carica l'IPA su TestFlight con:
 
 ```yaml
