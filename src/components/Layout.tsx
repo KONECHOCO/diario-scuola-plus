@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDiaryStore } from '../store/useDiaryStore'
+import { showBanner } from '../lib/admob'
 import type { PageId } from '../types'
 import { BottomNav, MoreMenu } from './BottomNav'
 import {
@@ -36,6 +37,10 @@ export function Layout({ children }: LayoutProps) {
   const { currentPage, setPage, profiles, activeProfileId, settings, updateSettings } = useDiaryStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+
+  useEffect(() => {
+    showBanner().catch(console.error)
+  }, [])
   const profile = profiles.find(p => p.id === activeProfileId)
 
   const sections = [...new Set(NAV_ITEMS.map(i => i.section))]

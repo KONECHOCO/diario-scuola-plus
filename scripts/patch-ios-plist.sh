@@ -18,4 +18,23 @@ MSG="Diario Scuola Plus usa il microfono per registrare le tue lezioni audio."
   && /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" \
   || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
 
-echo "Info.plist aggiornato."
+# AdMob: GADApplicationIdentifier
+GAD_ID="${DIARIO_ADMOB_APP_ID:-ca-app-pub-3940256099942544~1458002511}"
+/usr/libexec/PlistBuddy -c "Print :GADApplicationIdentifier" "$PLIST" 2>/dev/null \
+  && /usr/libexec/PlistBuddy -c "Set :GADApplicationIdentifier $GAD_ID" "$PLIST" \
+  || /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string $GAD_ID" "$PLIST"
+
+# AdMob: SKAdNetworkItems (richiesto da iOS per privacy)
+/usr/libexec/PlistBuddy -c "Print :SKAdNetworkItems" "$PLIST" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems array" "$PLIST"
+
+add_sk() {
+  /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0 dict" "$PLIST" 2>/dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0:SKAdNetworkIdentifier string $1" "$PLIST" 2>/dev/null || true
+}
+add_sk "cstr6suwn9.skadnetwork"
+add_sk "4fzdc2evr5.skadnetwork"
+add_sk "2fnua5tdw4.skadnetwork"
+add_sk "ydx93a7ass.skadnetwork"
+
+echo "Info.plist aggiornato (AdMob incluso)."
