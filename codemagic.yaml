@@ -114,6 +114,7 @@ workflows:
           fi
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" ios/App/App/Info.plist 2>/dev/null || true
       - name: Verify iOS bundle identifier
         script: |
           DETECTED=$(xcode-project detect-bundle-id --project ios/App/App.xcodeproj)
