@@ -56,6 +56,8 @@ workflows:
     integrations:
       app_store_connect: "Ikonet Solutions"
     environment:
+      groups:
+        - diario_admob
       ios_signing:
         provisioning_profiles:
           - diario_appstore_v3
