@@ -9,8 +9,6 @@ workflows:
     environment:
       android_signing:
         - diario
-      groups:
-        - google_play
       vars:
         PACKAGE_NAME: "com.diarioscuolaplus.app"
         GOOGLE_PLAY_TRACK: internal
@@ -44,7 +42,7 @@ workflows:
       - android/app/build/outputs/logs/*
     publishing:
       google_play:
-        credentials: $GCP_CREDENTIALS
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
         track: $GOOGLE_PLAY_TRACK
         submit_as_draft: true
 
