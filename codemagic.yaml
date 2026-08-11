@@ -15,7 +15,7 @@ workflows:
         PACKAGE_NAME: "com.diarioscuolaplus.app"
         GOOGLE_PLAY_TRACK: internal
       node: 20
-      java: 17
+      java: 21
     triggering:
       events:
         - push
