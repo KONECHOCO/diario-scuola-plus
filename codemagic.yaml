@@ -8,7 +8,7 @@ workflows:
     instance_type: linux_x2
     environment:
       android_signing:
-        - diario
+        - ithelpdesk_android
       groups:
         - google_play
       vars:
