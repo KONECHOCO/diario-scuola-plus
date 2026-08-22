@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDiaryStore } from '../store/useDiaryStore'
 import { showBanner } from '../lib/admob'
+import { showInterstitialOnce, USE_UNITY_ADS } from '../lib/unityAds'
 import type { PageId } from '../types'
 import { BottomNav, MoreMenu } from './BottomNav'
 import {
@@ -39,7 +40,11 @@ export function Layout({ children }: LayoutProps) {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
 
   useEffect(() => {
-    showBanner().catch(console.error)
+    if (USE_UNITY_ADS) {
+      showInterstitialOnce().catch(console.error)
+    } else {
+      showBanner().catch(console.error)
+    }
   }, [])
   const profile = profiles.find(p => p.id === activeProfileId)
 

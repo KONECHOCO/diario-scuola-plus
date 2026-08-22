@@ -27,8 +27,11 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
+      # NOTE: VITE_USE_UNITY_ADS=true is temporary — AdMob account pub-1151868778464777
+      # was suspended for invalid traffic on ~2026-08-21 (29-day suspension).
+      # Revert (drop VITE_USE_UNITY_ADS=true) once ads are reinstated in the AdMob dashboard.
       - name: Build web app
-        script: npm run build
+        script: VITE_USE_UNITY_ADS=true npm run build
       - name: Generate icons and splash
         script: npm run assets:generate
       - name: Sync Capacitor Android
@@ -85,12 +88,16 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      - name: Build web app (con AdMob IDs)
+      # NOTE: VITE_USE_UNITY_ADS=true is temporary — AdMob account pub-1151868778464777
+      # was suspended for invalid traffic on ~2026-08-21 (29-day suspension).
+      # Revert (drop VITE_USE_UNITY_ADS=true) once ads are reinstated in the AdMob dashboard.
+      - name: Build web app (con AdMob/Unity Ads IDs)
         script: |
           ADMOB_BANNER="${DIARIO_ADMOB_BANNER_ID:-ca-app-pub-3940256099942544/2934735716}"
           ADMOB_INTERSTITIAL="${DIARIO_ADMOB_INTERSTITIAL_ID:-ca-app-pub-3940256099942544/4411468910}"
           VITE_ADMOB_BANNER_ID="$ADMOB_BANNER" \
           VITE_ADMOB_INTERSTITIAL_ID="$ADMOB_INTERSTITIAL" \
+          VITE_USE_UNITY_ADS=true \
           npm run build
       - name: Add iOS platform if missing
         script: |
