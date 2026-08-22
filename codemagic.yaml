@@ -332,7 +332,7 @@ workflows:
 
                   parent?.rewardedVideoLoaded = false // Reset loaded state
 
-                  if state == .ShowCompletionStateCompleted {
+                  if state == .showCompletionStateCompleted {
                       // User watched the full video, give reward
                       let reward = ["type": "coins", "amount": 1] as [String: Any]
                       callback(true, reward, nil)
