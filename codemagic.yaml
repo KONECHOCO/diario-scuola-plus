@@ -38,6 +38,14 @@ workflows:
         script: npx cap sync android
       - name: Set Android SDK location
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Set build number (from Google Play)
+        script: |
+          LATEST=$(google-play get-latest-build-number \
+            --package-name "$PACKAGE_NAME" \
+            --tracks=internal,alpha,beta,production \
+            2>/dev/null || echo 0)
+          BUILD_NUMBER=$((${LATEST:-0} + 1))
+          sed -i "s/versionCode [0-9]\+/versionCode $BUILD_NUMBER/" android/app/build.gradle
       - name: Build release AAB
         script: |
           cd android
@@ -102,7 +110,18 @@ workflows:
       - name: Add iOS platform if missing
         script: |
           if [ ! -d "ios/App" ]; then
-            npx cap add ios
+            # `cap add ios` scaffolds the project (incl. Podfile) then runs an
+            # internal `pod install`, which fails here because UnityAds ships
+            # a static xcframework and Capacitor's default Podfile uses
+            # dynamic `use_frameworks!`. Scaffolding still completes before
+            # the pod-install sub-step, so we tolerate this specific failure
+            # and fix linkage in the next step before pods are (re)installed.
+            npx cap add ios || echo "cap add ios: ignoring known pod-install failure (static UnityAds xcframework), Podfile will be patched next"
+          fi
+      - name: Patch Podfile for Unity Ads static linkage
+        script: |
+          if ! grep -q ":linkage => :static" ios/App/Podfile; then
+            sed -i '' "s/^use_frameworks!$/use_frameworks! :linkage => :static/" ios/App/Podfile
           fi
       - name: Generate icons and splash
         script: npm run assets:generate
