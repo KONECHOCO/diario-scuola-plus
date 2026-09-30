@@ -125,8 +125,9 @@ export function formatAverage(scale: GradeScale, unit: number | null, locale: st
 }
 
 export function scaleRangeLabel(scale: GradeScale): string {
-  if (scale.letters) return `${scale.letters[0][0]}–${scale.letters[scale.letters.length - 1][0]}`
-  return scale.reversed ? `${scale.min}–${scale.max} (1 = ★)` : `${scale.min}–${scale.max}`
+  // Isolated left-to-right so "0–100" doesn't flip inside Arabic text.
+  if (scale.letters) return `⁦${scale.letters[0][0]}–${scale.letters[scale.letters.length - 1][0]}⁩`
+  return `⁦${scale.min}–${scale.max}${scale.reversed ? ' (1 = ★)' : ''}⁩`
 }
 
 /** Rounds a needed value to the scale step, towards the "safer" (better) side. */

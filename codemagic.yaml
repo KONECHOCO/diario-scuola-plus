@@ -88,9 +88,9 @@ workflows:
         - diario_admob
       ios_signing:
         provisioning_profiles:
-          - diario_appstore_v3
+          - diario_appstore_20260930
         certificates:
-          - lexiguess_distribution
+          - ithelpdesk_distribution_20260916
       vars:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
