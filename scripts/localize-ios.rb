@@ -36,6 +36,10 @@ strings.each do |lang, values|
   variant.children << ref
 end
 
+# @capgo/native-purchases requires iOS 15.
+project.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0' }
+target.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0' }
+
 project.root_object.known_regions = (project.root_object.known_regions + strings.keys + ['Base']).uniq
 project.root_object.development_region = 'en'
 project.save

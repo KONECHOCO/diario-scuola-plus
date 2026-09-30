@@ -135,6 +135,9 @@ workflows:
           if ! grep -q ":linkage => :static" ios/App/Podfile; then
             sed -i '' "s/^use_frameworks!$/use_frameworks! :linkage => :static/" ios/App/Podfile
           fi
+          # @capgo/native-purchases needs iOS 15
+          sed -i '' "s/^platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
+          grep "platform :ios" ios/App/Podfile
       - name: Localize iOS project (16 languages)
         script: |
           gem install xcodeproj --user-install --no-document

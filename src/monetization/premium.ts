@@ -20,7 +20,8 @@ let priceString: string | undefined
 let refreshPromise: Promise<boolean> | undefined
 let expiryTimer: ReturnType<typeof setTimeout> | undefined
 
-export const purchasesEnabled = Capacitor.isNativePlatform()
+// `?iapshot` renders the purchase card on the web build, only for the App Review screenshot.
+export const purchasesEnabled = Capacitor.isNativePlatform() || new URLSearchParams(location.search).has('iapshot')
 
 scheduleTempExpiry()
 

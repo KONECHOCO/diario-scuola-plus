@@ -1,0 +1,10 @@
+﻿import { chromium } from 'playwright'
+const b = await chromium.launch({ channel: 'chrome' })
+const c = await b.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: true, locale: 'en' })
+const p = await c.newPage()
+await p.goto('http://localhost:4180/')
+await p.evaluate(() => localStorage.setItem('diario-scuola-plus', JSON.stringify({ state: { currentPage: 'impostazioni', settings: { onboardingComplete: true, language: 'en', gradeScale: 'letter', passMark: 1, periods: [] }, profiles: [{ id: 'default', name: 'Emma', school: 'Lincoln High School', className: '10B', level: 'superiore', avatar: '🎓' }], activeProfileId: 'default' }, version: 2 })))
+await p.goto('http://localhost:4180/?iapshot', { waitUntil: 'networkidle' })
+await p.waitForTimeout(1500)
+await p.screenshot({ path: 'store/iap-review.png' })
+await b.close()
