@@ -1,41 +1,48 @@
-import { useDiaryStore } from '../store/useDiaryStore'
-import { calcSubjectAverage } from '../types'
+import { useDiaryStore, localDate } from '../store/useDiaryStore'
+import { formatGrade, fromUnit, gradeUnit, subjectUnitAverage } from '../lib/grades'
+import { useT } from '../i18n/useT'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts'
-import { format, parseISO, subDays, eachDayOfInterval } from 'date-fns'
-import { it } from 'date-fns/locale'
+import { subDays, eachDayOfInterval } from 'date-fns'
 
 export function StatistichePage() {
   const { subjects, grades, homework, pomodoroSessions, absences, studyStreak } = useDiaryStore()
+  const { t, fmt, scale, intl } = useT()
+  const round = (n: number) => Math.round(n * 100) / 100
+  // Letter scales are charted on their numeric value (GPA points).
+  // Reversed scales (German 1–6) keep the best grade at the top via `reversed`.
+  const domain: [number, number] = [scale.min, scale.max]
+  const label = (v: number) => formatGrade(scale, v, intl)
 
-  const subjectData = subjects.map(sub => ({
-    name: sub.name.length > 8 ? sub.name.slice(0, 8) + '…' : sub.name,
-    media: calcSubjectAverage(grades, sub.id) ?? 0,
-    color: sub.color,
-  })).filter(s => s.media > 0)
+  const subjectData = subjects
+    .map(sub => {
+      const avg = subjectUnitAverage(grades, sub.id)
+      return {
+        name: sub.name.length > 8 ? sub.name.slice(0, 8) + '…' : sub.name,
+        avg: avg === null ? null : round(fromUnit(scale, avg)),
+        color: sub.color,
+      }
+    })
+    .filter((s): s is { name: string; avg: number; color: string } => s.avg !== null)
 
   const gradeTrend = [...grades]
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((g, i) => ({
-      date: format(parseISO(g.date), 'd/M', { locale: it }),
-      voto: Math.round((g.value / g.maxValue) * 100) / 10,
-      index: i + 1,
-    }))
+    .map((g, i) => ({ index: i + 1, value: round(fromUnit(scale, gradeUnit(g))) }))
 
   const last7Days = eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() })
   const studyData = last7Days.map(day => {
-    const dateStr = format(day, 'yyyy-MM-dd')
+    const dateStr = localDate(day)
     const minutes = pomodoroSessions
-      .filter(s => s.date.startsWith(dateStr) && s.type === 'focus')
+      .filter(s => s.type === 'focus' && localDate(new Date(s.date)) === dateStr)
       .reduce((a, s) => a + s.duration, 0)
-    return { giorno: format(day, 'EEE', { locale: it }), minuti: minutes }
+    return { day: fmt(day, 'EEEEEE'), minutes }
   })
 
   const hwStats = [
-    { name: 'Completati', value: homework.filter(h => h.completed).length, color: '#22c55e' },
-    { name: 'Da fare', value: homework.filter(h => !h.completed).length, color: '#f59e0b' },
+    { name: t('f_done'), value: homework.filter(h => h.completed).length, color: '#22c55e' },
+    { name: t('f_todo'), value: homework.filter(h => !h.completed).length, color: '#f59e0b' },
   ].filter(s => s.value > 0)
 
   const totalStudyMinutes = pomodoroSessions.filter(s => s.type === 'focus').reduce((a, s) => a + s.duration, 0)
@@ -44,10 +51,10 @@ export function StatistichePage() {
     <div className="max-w-5xl space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Voti inseriti', value: grades.length },
-          { label: 'Compiti totali', value: homework.length },
-          { label: 'Minuti di studio', value: totalStudyMinutes },
-          { label: 'Streak', value: `${studyStreak} giorni` },
+          { label: t('st_grades'), value: grades.length },
+          { label: t('st_hw'), value: homework.length },
+          { label: t('st_minutes'), value: totalStudyMinutes },
+          { label: t('st_streak'), value: `${studyStreak}🔥` },
         ].map(stat => (
           <div key={stat.label} className="card text-center">
             <p className="text-2xl font-bold text-primary-600">{stat.value}</p>
@@ -56,16 +63,16 @@ export function StatistichePage() {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-4" dir="ltr">
         {subjectData.length > 0 && (
           <div className="card">
-            <h3 className="font-semibold mb-4">Media per materia</h3>
+            <h3 className="font-semibold mb-4" dir="auto">{t('avg_by_subject')}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={subjectData}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => [`${v}/10`, 'Media']} />
-                <Bar dataKey="media" radius={[6, 6, 0, 0]}>
+                <YAxis domain={domain} reversed={!!scale.reversed} tick={{ fontSize: 11 }} tickFormatter={label} />
+                <Tooltip formatter={(v: number) => [label(v), t('average')]} />
+                <Bar dataKey="avg" radius={[6, 6, 0, 0]}>
                   {subjectData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Bar>
               </BarChart>
@@ -74,27 +81,27 @@ export function StatistichePage() {
         )}
 
         <div className="card">
-          <h3 className="font-semibold mb-4">Studio ultimi 7 giorni (minuti)</h3>
+          <h3 className="font-semibold mb-4" dir="auto">{t('study_7d')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={studyData}>
-              <XAxis dataKey="giorno" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => [`${v} min`, 'Studio']} />
-              <Bar dataKey="minuti" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <Tooltip formatter={(v: number) => [t('min_n', { n: v }), t('study')]} />
+              <Bar dataKey="minutes" fill="#3b82f6" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {gradeTrend.length > 1 && (
           <div className="card">
-            <h3 className="font-semibold mb-4">Andamento voti</h3>
+            <h3 className="font-semibold mb-4" dir="auto">{t('grade_trend')}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={gradeTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="index" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => [`${v}/10`, 'Voto']} labelFormatter={(l) => `Voto #${l}`} />
-                <Line type="monotone" dataKey="voto" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                <YAxis domain={domain} reversed={!!scale.reversed} tick={{ fontSize: 11 }} tickFormatter={label} />
+                <Tooltip formatter={(v: number) => [label(v), t('grade')]} labelFormatter={(l) => t('grade_n', { n: l })} />
+                <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -102,7 +109,7 @@ export function StatistichePage() {
 
         {hwStats.length > 0 && (
           <div className="card">
-            <h3 className="font-semibold mb-4">Stato compiti</h3>
+            <h3 className="font-semibold mb-4" dir="auto">{t('hw_status')}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={hwStats} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`}>
@@ -117,10 +124,13 @@ export function StatistichePage() {
 
       {absences.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold mb-2">Assenze</h3>
+          <h3 className="font-semibold mb-2">{t('absences')}</h3>
           <p className="text-sm text-gray-500">
-            Totale: {absences.length} · Giustificate: {absences.filter(a => a.justified).length} ·
-            Ore: {absences.reduce((s, a) => s + (a.hours ?? 1), 0)}
+            {t('abs_summary', {
+              n: absences.length,
+              j: absences.filter(a => a.justified).length,
+              h: absences.reduce((s, a) => s + (a.hours ?? 1), 0),
+            })}
           </p>
         </div>
       )}

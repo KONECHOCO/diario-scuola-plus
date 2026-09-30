@@ -8,24 +8,25 @@ if [ ! -f "$PLIST" ]; then
   exit 1
 fi
 
-MSG="Diario Scuola Plus usa il microfono per registrare le tue lezioni audio."
+set_key() { # set_key <key> <type> <value>
+  /usr/libexec/PlistBuddy -c "Print :$1" "$PLIST" >/dev/null 2>&1 \
+    && /usr/libexec/PlistBuddy -c "Set :$1 $3" "$PLIST" \
+    || /usr/libexec/PlistBuddy -c "Add :$1 $2 $3" "$PLIST"
+}
 
-/usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$PLIST" 2>/dev/null \
-  && /usr/libexec/PlistBuddy -c "Set :NSMicrophoneUsageDescription '$MSG'" "$PLIST" \
-  || /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string '$MSG'" "$PLIST"
-
-/usr/libexec/PlistBuddy -c "Print :ITSAppUsesNonExemptEncryption" "$PLIST" 2>/dev/null \
-  && /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" \
-  || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+# English base texts; every language has its own lproj/InfoPlist.strings (scripts/localize-ios.rb).
+set_key NSMicrophoneUsageDescription string "'The microphone is used to record your classes.'"
+set_key NSCameraUsageDescription string "'The camera is used to take photos of the board and books to attach to homework and notes.'"
+set_key NSPhotoLibraryUsageDescription string "'Photos you pick are attached to homework and notes and stay on your device.'"
+set_key ITSAppUsesNonExemptEncryption bool false
+set_key CFBundleDevelopmentRegion string en
 
 # AdMob: GADApplicationIdentifier
 GAD_ID="${DIARIO_ADMOB_APP_ID:-ca-app-pub-3940256099942544~1458002511}"
-/usr/libexec/PlistBuddy -c "Print :GADApplicationIdentifier" "$PLIST" 2>/dev/null \
-  && /usr/libexec/PlistBuddy -c "Set :GADApplicationIdentifier $GAD_ID" "$PLIST" \
-  || /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string $GAD_ID" "$PLIST"
+set_key GADApplicationIdentifier string "$GAD_ID"
 
-# AdMob: SKAdNetworkItems (richiesto da iOS per privacy)
-/usr/libexec/PlistBuddy -c "Print :SKAdNetworkItems" "$PLIST" 2>/dev/null || \
+# SKAdNetwork ids (Google + Unity)
+/usr/libexec/PlistBuddy -c "Print :SKAdNetworkItems" "$PLIST" >/dev/null 2>&1 || \
 /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems array" "$PLIST"
 
 add_sk() {
@@ -36,5 +37,7 @@ add_sk "cstr6suwn9.skadnetwork"
 add_sk "4fzdc2evr5.skadnetwork"
 add_sk "2fnua5tdw4.skadnetwork"
 add_sk "ydx93a7ass.skadnetwork"
+add_sk "4dzt52r2t5.skadnetwork"
+add_sk "bvpn9ufa9b.skadnetwork"
 
-echo "Info.plist aggiornato (AdMob incluso)."
+echo "Info.plist aggiornato (AdMob, permessi, lingue)."

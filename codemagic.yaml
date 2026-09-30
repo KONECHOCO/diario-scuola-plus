@@ -27,11 +27,17 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      # NOTE: VITE_USE_UNITY_ADS=true is temporary — AdMob account pub-1151868778464777
-      # was suspended for invalid traffic on ~2026-08-21 (29-day suspension).
-      # Revert (drop VITE_USE_UNITY_ADS=true) once ads are reinstated in the AdMob dashboard.
+      # Ads: Unity video at launch + every 5 min (at a section change). No AdMob
+      # banner on Android until an Android AdMob app/banner exists
+      # (then set DIARIO_ADMOB_BANNER_ID_ANDROID and ADMOB_APP_ID_ANDROID).
       - name: Build web app
-        script: VITE_USE_UNITY_ADS=true npm run build
+        script: |
+          VITE_UNITY_GAME_ID_ANDROID=800360436 \
+          VITE_UNITY_INTERSTITIAL_PLACEMENT_ID_ANDROID=Interstitial_Android \
+          VITE_UNITY_REWARDED_PLACEMENT_ID_ANDROID=Rewarded_Android \
+          VITE_ADMOB_BANNER_ID_ANDROID="${DIARIO_ADMOB_BANNER_ID_ANDROID:-}" \
+          VITE_ADS_TEST_MODE=false \
+          npm run build
       - name: Generate icons and splash
         script: npm run assets:generate
       - name: Sync Capacitor Android
@@ -104,291 +110,14 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      # capacitor-unity-ads@1.0.0's Swift source doesn't compile against the
-      # UnityAds SDK version its own podspec requires (~> 4.9.2): several
-      # delegate methods were renamed and UnityAds.initialize() no longer
-      # accepts closures (it takes a UnityAdsInitializationDelegate object).
-      # This rewrites the plugin's iOS source with the corrected API calls,
-      # confirmed against Unity's official Objective-C example app. Safe to
-      # remove once upstream (https://github.com/eliazv/capacitor-unity-ads)
-      # ships a fix and we bump the npm dependency.
-      - name: Patch capacitor-unity-ads iOS plugin for current UnityAds SDK API
+      # Ads: Unity video at launch + every 5 min (at a section change), AdMob banner.
+      - name: Build web app (ads + IAP)
         script: |
-          cat > node_modules/capacitor-unity-ads/ios/Sources/UnityadsPlugin/Unityads.swift <<'SWIFT_EOF'
-          import Foundation
-          import UnityAds
-
-          @objc public class Unityads: NSObject {
-              private var isInitialized = false
-              private var testMode = false
-              private var currentRewardedPlacementId: String?
-              private var currentInterstitialPlacementId: String?
-              var rewardedVideoLoaded = false
-              var interstitialLoaded = false
-              private var pendingInitCallback: InitializationCallback?
-
-              // Callback types
-              typealias InitializationCallback = (Bool, String?) -> Void
-              typealias AdLoadCallback = (Bool, String?) -> Void
-              typealias RewardedVideoCallback = (Bool, [String: Any]?, String?) -> Void
-              typealias InterstitialCallback = (Bool, String?) -> Void
-
-              func initialize(gameId: String, testMode: Bool, callback: @escaping InitializationCallback) {
-                  print("[UnityAds] Initializing with Game ID: \(gameId)")
-
-                  self.testMode = testMode
-                  self.pendingInitCallback = callback
-
-                  UnityAds.initialize(gameId, testMode: testMode, initializationDelegate: InitializationDelegate(parent: self))
-              }
-
-              func handleInitializationComplete() {
-                  print("[UnityAds] Initialized successfully")
-                  isInitialized = true
-                  pendingInitCallback?(true, nil)
-                  pendingInitCallback = nil
-              }
-
-              func handleInitializationFailed(message: String) {
-                  print("[UnityAds] Initialization failed: \(message)")
-                  pendingInitCallback?(false, message)
-                  pendingInitCallback = nil
-              }
-
-              func loadRewardedVideo(placementId: String, callback: @escaping AdLoadCallback) {
-                  guard isInitialized else {
-                      callback(false, "Unity Ads not initialized")
-                      return
-                  }
-
-                  print("[UnityAds] Loading rewarded video with placement ID: \(placementId)")
-
-                  currentRewardedPlacementId = placementId
-                  rewardedVideoLoaded = false
-
-                  UnityAds.load(placementId, loadDelegate: RewardedVideoLoadDelegate(callback: callback, parent: self))
-              }
-
-              func showRewardedVideo(callback: @escaping RewardedVideoCallback) {
-                  guard isInitialized else {
-                      callback(false, nil, "Unity Ads not initialized")
-                      return
-                  }
-
-                  guard let placementId = currentRewardedPlacementId, rewardedVideoLoaded else {
-                      callback(false, nil, "Rewarded video not loaded")
-                      return
-                  }
-
-                  guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
-                      callback(false, nil, "No root view controller available")
-                      return
-                  }
-
-                  print("[UnityAds] Showing rewarded video")
-
-                  UnityAds.show(rootViewController, placementId: placementId, showDelegate: RewardedVideoShowDelegate(callback: callback, parent: self))
-              }
-
-              func isRewardedVideoLoaded() -> Bool {
-                  return rewardedVideoLoaded && currentRewardedPlacementId != nil
-              }
-
-              func loadInterstitial(placementId: String, callback: @escaping AdLoadCallback) {
-                  guard isInitialized else {
-                      callback(false, "Unity Ads not initialized")
-                      return
-                  }
-
-                  print("[UnityAds] Loading interstitial with placement ID: \(placementId)")
-
-                  currentInterstitialPlacementId = placementId
-                  interstitialLoaded = false
-
-                  UnityAds.load(placementId, loadDelegate: InterstitialLoadDelegate(callback: callback, parent: self))
-              }
-
-              func showInterstitial(callback: @escaping InterstitialCallback) {
-                  guard isInitialized else {
-                      callback(false, "Unity Ads not initialized")
-                      return
-                  }
-
-                  guard let placementId = currentInterstitialPlacementId, interstitialLoaded else {
-                      callback(false, "Interstitial not loaded")
-                      return
-                  }
-
-                  guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
-                      callback(false, "No root view controller available")
-                      return
-                  }
-
-                  print("[UnityAds] Showing interstitial")
-
-                  UnityAds.show(rootViewController, placementId: placementId, showDelegate: InterstitialShowDelegate(callback: callback, parent: self))
-              }
-
-              func isInterstitialLoaded() -> Bool {
-                  return interstitialLoaded && currentInterstitialPlacementId != nil
-              }
-
-              func setTestMode(enabled: Bool) {
-                  print("[UnityAds] Setting test mode: \(enabled)")
-                  self.testMode = enabled
-                  // Unity Ads test mode is set during initialization
-              }
-
-              func getVersion() -> String {
-                  return UnityAds.getVersion() ?? "unknown"
-              }
-          }
-
-          // MARK: - Initialization Delegate
-
-          class InitializationDelegate: NSObject, UnityAdsInitializationDelegate {
-              private weak var parent: Unityads?
-
-              init(parent: Unityads) {
-                  self.parent = parent
-              }
-
-              func initializationComplete() {
-                  parent?.handleInitializationComplete()
-              }
-
-              func initializationFailed(_ error: UnityAdsInitializationError, withMessage message: String) {
-                  parent?.handleInitializationFailed(message: message)
-              }
-          }
-
-          // MARK: - Load Delegates
-
-          class RewardedVideoLoadDelegate: NSObject, UnityAdsLoadDelegate {
-              private let callback: Unityads.AdLoadCallback
-              private weak var parent: Unityads?
-
-              init(callback: @escaping Unityads.AdLoadCallback, parent: Unityads) {
-                  self.callback = callback
-                  self.parent = parent
-              }
-
-              func unityAdsAdLoaded(_ placementId: String) {
-                  print("[UnityAds] Rewarded video loaded successfully")
-                  parent?.rewardedVideoLoaded = true
-                  callback(true, nil)
-              }
-
-              func unityAdsAdFailed(toLoad placementId: String, withError error: UnityAdsLoadError, withMessage message: String) {
-                  print("[UnityAds] Rewarded video failed to load: \(message)")
-                  parent?.rewardedVideoLoaded = false
-                  callback(false, "Failed to load rewarded video: \(message)")
-              }
-          }
-
-          class InterstitialLoadDelegate: NSObject, UnityAdsLoadDelegate {
-              private let callback: Unityads.AdLoadCallback
-              private weak var parent: Unityads?
-
-              init(callback: @escaping Unityads.AdLoadCallback, parent: Unityads) {
-                  self.callback = callback
-                  self.parent = parent
-              }
-
-              func unityAdsAdLoaded(_ placementId: String) {
-                  print("[UnityAds] Interstitial loaded successfully")
-                  parent?.interstitialLoaded = true
-                  callback(true, nil)
-              }
-
-              func unityAdsAdFailed(toLoad placementId: String, withError error: UnityAdsLoadError, withMessage message: String) {
-                  print("[UnityAds] Interstitial failed to load: \(message)")
-                  parent?.interstitialLoaded = false
-                  callback(false, "Failed to load interstitial: \(message)")
-              }
-          }
-
-          // MARK: - Show Delegates
-
-          class RewardedVideoShowDelegate: NSObject, UnityAdsShowDelegate {
-              private let callback: Unityads.RewardedVideoCallback
-              private weak var parent: Unityads?
-
-              init(callback: @escaping Unityads.RewardedVideoCallback, parent: Unityads) {
-                  self.callback = callback
-                  self.parent = parent
-              }
-
-              func unityAdsShowStart(_ placementId: String) {
-                  print("[UnityAds] Rewarded video show started")
-              }
-
-              func unityAdsShowClick(_ placementId: String) {
-                  print("[UnityAds] Rewarded video clicked")
-              }
-
-              func unityAdsShowComplete(_ placementId: String, withFinish state: UnityAdsShowCompletionState) {
-                  print("[UnityAds] Rewarded video show completed with state: \(state.rawValue)")
-
-                  parent?.rewardedVideoLoaded = false // Reset loaded state
-
-                  if state == .showCompletionStateCompleted {
-                      // User watched the full video, give reward
-                      let reward = ["type": "coins", "amount": 1] as [String: Any]
-                      callback(true, reward, nil)
-                  } else {
-                      // User skipped or ad was not completed
-                      callback(false, nil, nil)
-                  }
-              }
-
-              func unityAdsShowFailed(_ placementId: String, withError error: UnityAdsShowError, withMessage message: String) {
-                  print("[UnityAds] Rewarded video show failed: \(message)")
-                  parent?.rewardedVideoLoaded = false
-                  callback(false, nil, "Failed to show rewarded video: \(message)")
-              }
-          }
-
-          class InterstitialShowDelegate: NSObject, UnityAdsShowDelegate {
-              private let callback: Unityads.InterstitialCallback
-              private weak var parent: Unityads?
-
-              init(callback: @escaping Unityads.InterstitialCallback, parent: Unityads) {
-                  self.callback = callback
-                  self.parent = parent
-              }
-
-              func unityAdsShowStart(_ placementId: String) {
-                  print("[UnityAds] Interstitial show started")
-                  callback(true, nil)
-              }
-
-              func unityAdsShowClick(_ placementId: String) {
-                  print("[UnityAds] Interstitial clicked")
-              }
-
-              func unityAdsShowComplete(_ placementId: String, withFinish state: UnityAdsShowCompletionState) {
-                  print("[UnityAds] Interstitial show completed")
-                  parent?.interstitialLoaded = false // Reset loaded state
-              }
-
-              func unityAdsShowFailed(_ placementId: String, withError error: UnityAdsShowError, withMessage message: String) {
-                  print("[UnityAds] Interstitial show failed: \(message)")
-                  parent?.interstitialLoaded = false
-                  callback(false, "Failed to show interstitial: \(message)")
-              }
-          }
-          SWIFT_EOF
-      # NOTE: VITE_USE_UNITY_ADS=true is temporary — AdMob account pub-1151868778464777
-      # was suspended for invalid traffic on ~2026-08-21 (29-day suspension).
-      # Revert (drop VITE_USE_UNITY_ADS=true) once ads are reinstated in the AdMob dashboard.
-      - name: Build web app (con AdMob/Unity Ads IDs)
-        script: |
-          ADMOB_BANNER="${DIARIO_ADMOB_BANNER_ID:-ca-app-pub-3940256099942544/2934735716}"
-          ADMOB_INTERSTITIAL="${DIARIO_ADMOB_INTERSTITIAL_ID:-ca-app-pub-3940256099942544/4411468910}"
-          VITE_ADMOB_BANNER_ID="$ADMOB_BANNER" \
-          VITE_ADMOB_INTERSTITIAL_ID="$ADMOB_INTERSTITIAL" \
-          VITE_USE_UNITY_ADS=true \
+          VITE_UNITY_GAME_ID_IOS=800360437 \
+          VITE_UNITY_INTERSTITIAL_PLACEMENT_ID_IOS=Interstitial_iOS \
+          VITE_UNITY_REWARDED_PLACEMENT_ID_IOS=Rewarded_iOS \
+          VITE_ADMOB_BANNER_ID_IOS="${DIARIO_ADMOB_BANNER_ID:-}" \
+          VITE_ADS_TEST_MODE=false \
           npm run build
       - name: Add iOS platform if missing
         script: |
@@ -406,6 +135,11 @@ workflows:
           if ! grep -q ":linkage => :static" ios/App/Podfile; then
             sed -i '' "s/^use_frameworks!$/use_frameworks! :linkage => :static/" ios/App/Podfile
           fi
+      - name: Localize iOS project (16 languages)
+        script: |
+          gem install xcodeproj --user-install --no-document
+          export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+          ruby scripts/localize-ios.rb
       - name: Generate icons and splash
         script: npm run assets:generate
       - name: Patch Info.plist permissions
@@ -426,7 +160,7 @@ workflows:
           fi
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.2" ios/App/App/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.0" ios/App/App/Info.plist 2>/dev/null || true
       - name: Verify iOS bundle identifier
         script: |
           DETECTED=$(xcode-project detect-bundle-id --project ios/App/App.xcodeproj)

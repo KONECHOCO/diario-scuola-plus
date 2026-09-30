@@ -6,6 +6,14 @@ export type TaskPriority = 'bassa' | 'media' | 'alta'
 
 export type SchoolLevel = 'elementare' | 'media' | 'superiore' | 'universita'
 
+export const LANGS = ['it', 'en', 'fr', 'de', 'es', 'pt', 'nl', 'pl', 'ro', 'sv', 'ru', 'uk', 'tr', 'ar', 'zh', 'ja'] as const
+export type LangCode = typeof LANGS[number]
+
+export type GradeScaleId = '10' | '20' | 'de6' | '6' | '5' | '12' | '100' | 'letter' | 'se'
+
+/** Timetable rotation: every week, or only in week A / week B. */
+export type WeekKind = 'A' | 'B'
+
 export interface Profile {
   id: string
   name: string
@@ -42,6 +50,7 @@ export interface TimetableSlot {
   endTime: string
   room?: string
   notes?: string
+  week?: WeekKind
 }
 
 export interface Homework {
@@ -54,6 +63,7 @@ export interface Homework {
   priority: TaskPriority
   reminder?: string
   createdAt: string
+  photos?: string[]
 }
 
 export interface Exam {
@@ -70,8 +80,10 @@ export interface Exam {
 export interface Grade {
   id: string
   subjectId: string
+  /** Value in `scale` (legacy grades: value out of maxValue). */
   value: number
   maxValue: number
+  scale?: GradeScaleId
   type: GradeType
   date: string
   description?: string
@@ -96,6 +108,7 @@ export interface Note {
   createdAt: string
   updatedAt: string
   pinned: boolean
+  photos?: string[]
 }
 
 export interface LessonRecording {
@@ -119,6 +132,10 @@ export interface Flashcard {
   lastReviewed?: string
   nextReview?: string
   reviewCount: number
+  /** SM-2 state */
+  ease?: number
+  interval?: number
+  reps?: number
 }
 
 export interface StudyGoal {
@@ -149,14 +166,27 @@ export interface PomodoroSession {
   date: string
 }
 
+/** A school term (quadrimestre, trimestre, semester...) running from `start` to the next term's start. */
+export interface Period {
+  id: string
+  name: string
+  start: string
+}
+
 export interface AppSettings {
   darkMode: boolean
   notifications: boolean
-  gradeSystem: 'decimi' | 'centesimi' | 'lettere'
+  gradeScale: GradeScaleId
+  passMark: number
   weekStartsOn: DayOfWeek
+  saturday: boolean
+  rotation: boolean
+  /** Monday (yyyy-MM-dd) of a week that is "week A". */
+  rotationAnchor: string
+  periods: Period[]
   pomodoroFocus: number
   pomodoroBreak: number
-  language: 'it'
+  language: LangCode | 'auto'
   onboardingComplete: boolean
 }
 
@@ -176,11 +206,8 @@ export type PageId =
   | 'flashcards'
   | 'obiettivi'
   | 'statistiche'
-  | 'ai'
+  | 'piano'
   | 'impostazioni'
-
-export const DAY_NAMES = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'] as const
-export const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'] as const
 
 export const SUBJECT_COLORS = [
   '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
@@ -190,20 +217,4 @@ export const SUBJECT_COLORS = [
 
 export function generateId(): string {
   return crypto.randomUUID()
-}
-
-export function calcSubjectAverage(grades: Grade[], subjectId: string): number | null {
-  const subjectGrades = grades.filter(g => g.subjectId === subjectId)
-  if (subjectGrades.length === 0) return null
-  const total = subjectGrades.reduce((sum, g) => sum + (g.value / g.maxValue) * 10 * g.weight, 0)
-  const weightSum = subjectGrades.reduce((sum, g) => sum + g.weight, 0)
-  return Math.round((total / weightSum) * 100) / 100
-}
-
-export function calcOverallAverage(grades: Grade[], subjects: Subject[]): number | null {
-  const avgs = subjects
-    .map(s => calcSubjectAverage(grades, s.id))
-    .filter((a): a is number => a !== null)
-  if (avgs.length === 0) return null
-  return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 100) / 100
 }

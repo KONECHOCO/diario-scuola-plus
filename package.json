@@ -14,7 +14,8 @@
     "deploy:preview": "npm run build && npx vercel",
     "assets:generate": "npx @capacitor/assets generate --iconBackgroundColor \"#2563eb\" --iconBackgroundColorDark \"#1e3a8a\" --splashBackgroundColor \"#2563eb\" --splashBackgroundColorDark \"#1e3a8a\"",
     "mobile:setup": "npm run build && npx cap add android && npx cap add ios && npm run assets:generate && npx cap sync",
-    "screenshots:store": "node scripts/capture-appstore-screenshots.mjs"
+    "screenshots:store": "node scripts/capture-appstore-screenshots.mjs",
+    "postinstall": "node scripts/patch-unity-ads.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^7.2.0",
@@ -29,6 +30,7 @@
     "@capacitor/share": "^7.0.1",
     "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
+    "@capgo/native-purchases": "^7.19.3",
     "capacitor-unity-ads": "^1.0.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",

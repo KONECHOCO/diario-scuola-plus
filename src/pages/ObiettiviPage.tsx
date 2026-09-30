@@ -1,18 +1,22 @@
 import { useState } from 'react'
-import { useDiaryStore } from '../store/useDiaryStore'
+import { useDiaryStore, localDate } from '../store/useDiaryStore'
+import { useT } from '../i18n/useT'
 import { Modal } from '../components/ui/Modal'
 import { EmptyState, ItemActions, ProgressBar } from '../components/ui/Common'
 import { Plus, Target, Check } from 'lucide-react'
-import { format } from 'date-fns'
+import { parseISO } from 'date-fns'
+import type { StudyGoal } from '../types'
 
 export function ObiettiviPage() {
   const { goals, addGoal, updateGoal, deleteGoal } = useDiaryStore()
+  const { t, fd } = useT()
+  const today = localDate()
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState({ title: '', targetMinutes: '60', date: format(new Date(), 'yyyy-MM-dd') })
+  const [form, setForm] = useState({ title: '', targetMinutes: '60', date: today })
 
-  const today = format(new Date(), 'yyyy-MM-dd')
   const todayGoals = goals.filter(g => g.date === today)
-  const otherGoals = goals.filter(g => g.date !== today)
+  const upcoming = goals.filter(g => g.date > today).sort((a, b) => a.date.localeCompare(b.date))
+  const past = goals.filter(g => g.date < today).sort((a, b) => b.date.localeCompare(a.date))
 
   const handleAdd = () => {
     if (!form.title) return
@@ -27,39 +31,34 @@ export function ObiettiviPage() {
     setForm({ title: '', targetMinutes: '60', date: today })
   }
 
-  const addMinutes = (id: string, minutes: number) => {
-    const goal = goals.find(g => g.id === id)
-    if (!goal) return
-    const newCompleted = Math.min(goal.targetMinutes, goal.completedMinutes + minutes)
-    updateGoal(id, {
-      completedMinutes: newCompleted,
-      completed: newCompleted >= goal.targetMinutes,
-    })
+  const addMinutes = (goal: StudyGoal, minutes: number) => {
+    const done = Math.min(goal.targetMinutes, goal.completedMinutes + minutes)
+    updateGoal(goal.id, { completedMinutes: done, completed: done >= goal.targetMinutes })
   }
 
-  const GoalCard = ({ goal }: { goal: typeof goals[0] }) => (
+  const GoalCard = ({ goal }: { goal: StudyGoal }) => (
     <div className={`card ${goal.completed ? 'opacity-70' : ''}`}>
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {goal.completed ? (
-            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white"><Check size={14} /></div>
+            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0"><Check size={14} /></div>
           ) : (
-            <Target size={20} className="text-primary-500" />
+            <Target size={20} className="text-primary-500 flex-shrink-0" />
           )}
-          <div>
+          <div className="min-w-0">
             <p className={`font-medium text-sm ${goal.completed ? 'line-through' : ''}`}>{goal.title}</p>
-            <p className="text-xs text-gray-400">{goal.date}</p>
+            <p className="text-xs text-gray-400">{fd(parseISO(goal.date), 'weekdayShort')}</p>
           </div>
         </div>
         <ItemActions onDelete={() => deleteGoal(goal.id)} />
       </div>
       <ProgressBar value={goal.completedMinutes} max={goal.targetMinutes} color={goal.completed ? '#22c55e' : '#3b82f6'} />
       <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-gray-400">{goal.completedMinutes}/{goal.targetMinutes} minuti</span>
+        <span className="text-xs text-gray-400">{t('minutes_progress', { done: goal.completedMinutes, target: goal.targetMinutes })}</span>
         {!goal.completed && (
           <div className="flex gap-1">
             {[15, 30, 60].map(m => (
-              <button key={m} onClick={() => addMinutes(goal.id, m)} className="text-xs btn-secondary px-2 py-1">+{m}m</button>
+              <button key={m} onClick={() => addMinutes(goal, m)} className="text-xs btn-secondary px-2 py-1">+{m}</button>
             ))}
           </div>
         )}
@@ -71,46 +70,46 @@ export function ObiettiviPage() {
     <div className="max-w-3xl space-y-6">
       <div className="flex justify-end">
         <button onClick={() => setModalOpen(true)} className="btn-primary flex items-center gap-2 text-sm">
-          <Plus size={16} /> Nuovo obiettivo
+          <Plus size={16} /> {t('new_goal')}
         </button>
       </div>
 
       {goals.length === 0 ? (
-        <EmptyState icon={<Target size={32} />} title="Nessun obiettivo" description="Imposta obiettivi di studio giornalieri per rimanere motivato" action={<button onClick={() => setModalOpen(true)} className="btn-primary">Crea obiettivo</button>} />
+        <EmptyState icon={<Target size={32} />} title={t('no_goals')} description={t('no_goals_desc')} action={<button onClick={() => setModalOpen(true)} className="btn-primary">{t('create_goal')}</button>} />
       ) : (
         <>
           {todayGoals.length > 0 && (
             <div>
-              <h3 className="font-semibold text-sm text-gray-500 mb-3">Oggi</h3>
+              <h3 className="font-semibold text-sm text-gray-500 mb-3">{t('today')}</h3>
               <div className="space-y-2">{todayGoals.map(g => <GoalCard key={g.id} goal={g} />)}</div>
             </div>
           )}
-          {otherGoals.length > 0 && (
+          {upcoming.length + past.length > 0 && (
             <div>
-              <h3 className="font-semibold text-sm text-gray-500 mb-3">Altri giorni</h3>
-              <div className="space-y-2">{otherGoals.map(g => <GoalCard key={g.id} goal={g} />)}</div>
+              <h3 className="font-semibold text-sm text-gray-500 mb-3">{t('other_days')}</h3>
+              <div className="space-y-2">{[...upcoming, ...past].map(g => <GoalCard key={g.id} goal={g} />)}</div>
             </div>
           )}
         </>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuovo obiettivo">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t('new_goal')}>
         <div className="space-y-4">
           <div>
-            <label className="label">Titolo</label>
-            <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="es. Studiare matematica" />
+            <label className="label">{t('title')}</label>
+            <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder={t('goal_ph')} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Minuti obiettivo</label>
-              <input type="number" className="input" value={form.targetMinutes} onChange={e => setForm(f => ({ ...f, targetMinutes: e.target.value }))} />
+              <label className="label">{t('target_minutes')}</label>
+              <input type="number" inputMode="numeric" className="input" value={form.targetMinutes} onChange={e => setForm(f => ({ ...f, targetMinutes: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Data</label>
+              <label className="label">{t('date')}</label>
               <input type="date" className="input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
             </div>
           </div>
-          <button onClick={handleAdd} className="btn-primary w-full">Salva</button>
+          <button onClick={handleAdd} disabled={!form.title} className="btn-primary w-full">{t('save')}</button>
         </div>
       </Modal>
     </div>

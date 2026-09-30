@@ -2,14 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { initAdMob } from './lib/admob'
-import { initUnityAds, USE_UNITY_ADS } from './lib/unityAds'
+import { useDiaryStore } from './store/useDiaryStore'
+import { applyDocumentLang, resolveLang } from './i18n/core'
 
-if (USE_UNITY_ADS) {
-  initUnityAds().catch(console.error)
-} else {
-  initAdMob().catch(console.error)
-}
+// Before the first paint, so right-to-left layouts don't animate into place.
+applyDocumentLang(resolveLang(useDiaryStore.getState().settings.language))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

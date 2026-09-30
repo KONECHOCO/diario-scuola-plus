@@ -1,34 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDiaryStore } from '../store/useDiaryStore'
-import { showBanner } from '../lib/admob'
-import { showInterstitialOnce, USE_UNITY_ADS } from '../lib/unityAds'
-import type { PageId } from '../types'
+import { useT } from '../i18n/useT'
+import { showInterstitialAfterNavigation } from '../monetization/ads'
 import { BottomNav, MoreMenu } from './BottomNav'
-import {
-  LayoutDashboard, Calendar, BookOpen, ClipboardList, GraduationCap,
-  Clock, Users, UserX, StickyNote, Mic, Timer, Layers, Target,
-  BarChart3, Sparkles, Settings, BookMarked, Menu, X, Moon, Sun,
-} from 'lucide-react'
+import { NAV_ITEMS, navKey, type Section } from './nav'
+import { Menu, X, Moon, Sun } from 'lucide-react'
 
-const NAV_ITEMS: { id: PageId; label: string; icon: React.ReactNode; section: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, section: 'Principale' },
-  { id: 'orario', label: 'Orario', icon: <Clock size={20} />, section: 'Principale' },
-  { id: 'compiti', label: 'Compiti', icon: <ClipboardList size={20} />, section: 'Principale' },
-  { id: 'esami', label: 'Esami', icon: <BookOpen size={20} />, section: 'Principale' },
-  { id: 'voti', label: 'Voti', icon: <GraduationCap size={20} />, section: 'Principale' },
-  { id: 'calendario', label: 'Calendario', icon: <Calendar size={20} />, section: 'Principale' },
-  { id: 'materie', label: 'Materie', icon: <BookMarked size={20} />, section: 'Gestione' },
-  { id: 'insegnanti', label: 'Insegnanti', icon: <Users size={20} />, section: 'Gestione' },
-  { id: 'assenze', label: 'Assenze', icon: <UserX size={20} />, section: 'Gestione' },
-  { id: 'note', label: 'Note', icon: <StickyNote size={20} />, section: 'Studio' },
-  { id: 'lezioni', label: 'Registrazioni', icon: <Mic size={20} />, section: 'Studio' },
-  { id: 'pomodoro', label: 'Pomodoro', icon: <Timer size={20} />, section: 'Studio' },
-  { id: 'flashcards', label: 'Flashcards', icon: <Layers size={20} />, section: 'Studio' },
-  { id: 'obiettivi', label: 'Obiettivi', icon: <Target size={20} />, section: 'Studio' },
-  { id: 'statistiche', label: 'Statistiche', icon: <BarChart3 size={20} />, section: 'Studio' },
-  { id: 'ai', label: 'Assistente AI', icon: <Sparkles size={20} />, section: 'Studio' },
-  { id: 'impostazioni', label: 'Impostazioni', icon: <Settings size={20} />, section: 'Sistema' },
-]
+const SECTIONS: Section[] = ['sec_main', 'sec_manage', 'sec_study', 'sec_system']
 
 interface LayoutProps {
   children: React.ReactNode
@@ -36,19 +14,25 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { currentPage, setPage, profiles, activeProfileId, settings, updateSettings } = useDiaryStore()
+  const { t } = useT()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
+  const firstPage = useRef(true)
 
+  // Section change: back to the top, and the paced interstitial (at most one
+  // every 5 minutes, see monetization/ads.ts).
   useEffect(() => {
-    if (USE_UNITY_ADS) {
-      showInterstitialOnce().catch(console.error)
-    } else {
-      showBanner().catch(console.error)
+    mainRef.current?.scrollTo({ top: 0 })
+    if (firstPage.current) {
+      firstPage.current = false
+      return
     }
-  }, [])
-  const profile = profiles.find(p => p.id === activeProfileId)
+    void showInterstitialAfterNavigation()
+  }, [currentPage])
 
-  const sections = [...new Set(NAV_ITEMS.map(i => i.section))]
+  const profile = profiles.find(p => p.id === activeProfileId)
+  const schoolLine = [profile?.school, profile?.className].filter(Boolean).join(' · ')
 
   const toggleDark = () => {
     const dark = !settings.darkMode
@@ -62,7 +46,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col transform transition-transform duration-300 safe-top ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 start-0 z-50 w-72 bg-white dark:bg-gray-900 border-e border-gray-100 dark:border-gray-800 flex flex-col transform transition-transform duration-300 safe-top ${sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0 lg:rtl:translate-x-0'}`}>
         <div className="p-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -70,7 +54,7 @@ export function Layout({ children }: LayoutProps) {
                 D+
               </div>
               <div>
-                <h1 className="font-bold text-sm">Diario Scuola Plus</h1>
+                <h1 className="font-bold text-sm">{t('app_name')}</h1>
                 <p className="text-xs text-gray-400">{profile?.avatar} {profile?.name}</p>
               </div>
             </div>
@@ -81,9 +65,9 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-          {sections.map(section => (
+          {SECTIONS.map(section => (
             <div key={section}>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">{section}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">{t(section)}</p>
               <div className="space-y-0.5">
                 {NAV_ITEMS.filter(i => i.section === section).map(item => (
                   <button
@@ -95,8 +79,8 @@ export function Layout({ children }: LayoutProps) {
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
-                    {item.icon}
-                    {item.label}
+                    {item.icon(20)}
+                    {t(navKey(item.id))}
                   </button>
                 ))}
               </div>
@@ -107,7 +91,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="p-3 border-t border-gray-100 dark:border-gray-800 safe-bottom">
           <button onClick={toggleDark} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             {settings.darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            {settings.darkMode ? 'Modalità chiara' : 'Modalità scura'}
+            {settings.darkMode ? t('light_mode') : t('dark_mode')}
           </button>
         </div>
       </aside>
@@ -117,14 +101,14 @@ export function Layout({ children }: LayoutProps) {
           <button className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl" onClick={() => setSidebarOpen(true)}>
             <Menu size={20} />
           </button>
-          <h2 className="font-semibold text-lg flex-1">
-            {NAV_ITEMS.find(i => i.id === currentPage)?.label}
-          </h2>
-          <div className="text-sm text-gray-500 hidden sm:block">
-            {profile?.school} · {profile?.className}
-          </div>
+          <h2 className="font-semibold text-lg flex-1 truncate">{t(navKey(currentPage))}</h2>
+          {schoolLine && <div className="text-sm text-gray-500 hidden sm:block">{schoolLine}</div>}
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6 animate-fade-in">
+        <main
+          ref={mainRef}
+          className="flex-1 overflow-y-auto p-4 lg:p-6 lg:pb-6 animate-fade-in"
+          style={{ paddingBottom: 'calc(6rem + var(--ad-banner-height, 0px))' }}
+        >
           {children}
         </main>
       </div>

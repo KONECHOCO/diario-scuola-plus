@@ -3,9 +3,13 @@ import { persist } from 'zustand/middleware'
 import type {
   Profile, Subject, Teacher, TimetableSlot, Homework, Exam, Grade,
   Absence, Note, LessonRecording, Flashcard, StudyGoal, CalendarEvent,
-  PomodoroSession, AppSettings, PageId,
+  PomodoroSession, AppSettings, PageId, DayOfWeek,
 } from '../types'
 import { generateId, SUBJECT_COLORS } from '../types'
+import { deviceLang, deviceLocale, translate } from '../i18n/core'
+import { defaultScaleFor } from '../lib/grades'
+
+export type ReviewAnswer = 'again' | 'hard' | 'good' | 'easy'
 
 interface DiaryState {
   currentPage: PageId
@@ -72,9 +76,10 @@ interface DiaryState {
   deleteRecording: (id: string) => void
 
   addFlashcard: (card: Omit<Flashcard, 'id' | 'reviewCount' | 'difficulty'>) => void
+  addFlashcards: (cards: Omit<Flashcard, 'id' | 'reviewCount' | 'difficulty'>[]) => void
   updateFlashcard: (id: string, data: Partial<Flashcard>) => void
   deleteFlashcard: (id: string) => void
-  reviewFlashcard: (id: string, correct: boolean) => void
+  reviewFlashcard: (id: string, answer: ReviewAnswer) => void
 
   addGoal: (goal: Omit<StudyGoal, 'id'>) => void
   updateGoal: (id: string, data: Partial<StudyGoal>) => void
@@ -91,33 +96,93 @@ interface DiaryState {
   resetData: () => void
 }
 
+const lang = deviceLang()
+const tr = (key: Parameters<typeof translate>[1]) => translate(lang, key)
+
 const defaultProfile: Profile = {
   id: 'default',
-  name: 'Studente',
-  school: 'La mia scuola',
-  className: '3A',
+  name: tr('default_student'),
+  school: '',
+  className: '',
   level: 'superiore',
   avatar: '🎓',
 }
 
+function mondayOfThisWeek(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return localDate(d)
+}
+
+export function localDate(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function defaultWeekStart(): DayOfWeek {
+  const region = deviceLocale().split(/[-_]/)[1]?.toUpperCase()
+  if (region && ['US', 'CA', 'BR', 'MX', 'JP', 'IL', 'PH', 'SA'].includes(region)) return 0
+  return 1
+}
+
+const regional = defaultScaleFor(deviceLocale())
+
 const defaultSettings: AppSettings = {
   darkMode: false,
   notifications: true,
-  gradeSystem: 'decimi',
-  weekStartsOn: 1,
+  gradeScale: regional.scale,
+  passMark: regional.pass,
+  weekStartsOn: defaultWeekStart(),
+  saturday: false,
+  rotation: false,
+  rotationAnchor: mondayOfThisWeek(),
+  periods: [],
   pomodoroFocus: 25,
   pomodoroBreak: 5,
-  language: 'it',
+  language: 'auto',
   onboardingComplete: false,
 }
 
-const sampleSubjects: Subject[] = [
-  { id: 's1', name: 'Matematica', color: SUBJECT_COLORS[0], coefficient: 2 },
-  { id: 's2', name: 'Italiano', color: SUBJECT_COLORS[1], coefficient: 2 },
-  { id: 's3', name: 'Inglese', color: SUBJECT_COLORS[2], coefficient: 1 },
-  { id: 's4', name: 'Storia', color: SUBJECT_COLORS[3], coefficient: 1 },
-  { id: 's5', name: 'Scienze', color: SUBJECT_COLORS[4], coefficient: 1 },
+const sampleSubjects = (): Subject[] => [
+  { id: 's1', name: tr('subj_math'), color: SUBJECT_COLORS[0], coefficient: 1 },
+  { id: 's2', name: tr('subj_lang'), color: SUBJECT_COLORS[1], coefficient: 1 },
+  { id: 's3', name: tr('subj_foreign'), color: SUBJECT_COLORS[2], coefficient: 1 },
+  { id: 's4', name: tr('subj_history'), color: SUBJECT_COLORS[3], coefficient: 1 },
+  { id: 's5', name: tr('subj_science'), color: SUBJECT_COLORS[4], coefficient: 1 },
 ]
+
+/** SM-2 scheduling (the algorithm behind Anki), in days. */
+function schedule(card: Flashcard, answer: ReviewAnswer): Partial<Flashcard> {
+  let ease = card.ease ?? 2.5
+  let reps = card.reps ?? 0
+  let interval = card.interval ?? 0
+  const next = new Date()
+  if (answer === 'again') {
+    reps = 0
+    interval = 0
+    ease = Math.max(1.3, ease - 0.2)
+    next.setMinutes(next.getMinutes() + 10)
+  } else {
+    if (answer === 'hard') {
+      interval = Math.max(1, Math.round(interval * 1.2))
+      ease = Math.max(1.3, ease - 0.15)
+    } else {
+      interval = reps === 0 ? 1 : reps === 1 ? 3 : Math.round(interval * ease)
+      if (answer === 'easy') {
+        interval = Math.round(interval * 1.3) + 1
+        ease += 0.15
+      }
+    }
+    reps += 1
+    next.setDate(next.getDate() + interval)
+  }
+  return {
+    ease, reps, interval,
+    difficulty: Math.round((3 - Math.min(3, ease - 1.3)) * 1.6),
+    reviewCount: card.reviewCount + 1,
+    lastReviewed: new Date().toISOString(),
+    nextReview: next.toISOString(),
+  }
+}
 
 export const useDiaryStore = create<DiaryState>()(
   persist(
@@ -125,7 +190,7 @@ export const useDiaryStore = create<DiaryState>()(
       currentPage: 'dashboard',
       activeProfileId: 'default',
       profiles: [defaultProfile],
-      subjects: sampleSubjects,
+      subjects: sampleSubjects(),
       teachers: [],
       timetable: [],
       homework: [],
@@ -256,8 +321,9 @@ export const useDiaryStore = create<DiaryState>()(
         recordings: s.recordings.filter(r => r.id !== id),
       })),
 
-      addFlashcard: (card) => set(s => ({
-        flashcards: [...s.flashcards, { ...card, id: generateId(), reviewCount: 0, difficulty: 0 }],
+      addFlashcard: (card) => get().addFlashcards([card]),
+      addFlashcards: (cards) => set(s => ({
+        flashcards: [...s.flashcards, ...cards.map(c => ({ ...c, id: generateId(), reviewCount: 0, difficulty: 0 }))],
       })),
       updateFlashcard: (id, data) => set(s => ({
         flashcards: s.flashcards.map(c => c.id === id ? { ...c, ...data } : c),
@@ -265,21 +331,8 @@ export const useDiaryStore = create<DiaryState>()(
       deleteFlashcard: (id) => set(s => ({
         flashcards: s.flashcards.filter(c => c.id !== id),
       })),
-      reviewFlashcard: (id, correct) => set(s => ({
-        flashcards: s.flashcards.map(c => {
-          if (c.id !== id) return c
-          const newDiff = correct ? Math.max(0, c.difficulty - 1) : Math.min(5, c.difficulty + 1)
-          const daysUntilNext = [1, 2, 4, 7, 14, 30][newDiff] ?? 1
-          const next = new Date()
-          next.setDate(next.getDate() + daysUntilNext)
-          return {
-            ...c,
-            difficulty: newDiff,
-            reviewCount: c.reviewCount + 1,
-            lastReviewed: new Date().toISOString(),
-            nextReview: next.toISOString(),
-          }
-        }),
+      reviewFlashcard: (id, answer) => set(s => ({
+        flashcards: s.flashcards.map(c => c.id === id ? { ...c, ...schedule(c, answer) } : c),
       })),
 
       addGoal: (goal) => set(s => ({
@@ -314,19 +367,18 @@ export const useDiaryStore = create<DiaryState>()(
       })),
 
       updateStudyStreak: () => {
-        const today = new Date().toISOString().split('T')[0]
+        const today = localDate()
         const { lastStudyDate, studyStreak } = get()
         if (lastStudyDate === today) return
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
-        const newStreak = lastStudyDate === yesterdayStr ? studyStreak + 1 : 1
+        const newStreak = lastStudyDate === localDate(yesterday) ? studyStreak + 1 : 1
         set({ studyStreak: newStreak, lastStudyDate: today })
       },
 
       importData: (data) => set(s => ({ ...s, ...data })),
       resetData: () => set({
-        subjects: sampleSubjects,
+        subjects: sampleSubjects(),
         teachers: [],
         timetable: [],
         homework: [],
@@ -343,6 +395,31 @@ export const useDiaryStore = create<DiaryState>()(
         lastStudyDate: null,
       }),
     }),
-    { name: 'diario-scuola-plus' }
+    {
+      name: 'diario-scuola-plus',
+      version: 2,
+      // v1 (Italian-only app): 1–10 grades, fixed Italian language.
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<DiaryState> & { settings?: Partial<AppSettings> & { gradeSystem?: string } }
+        if (version < 2) {
+          const old: Partial<AppSettings> & { gradeSystem?: string } = { ...state.settings }
+          delete old.gradeSystem
+          state.settings = {
+            ...defaultSettings,
+            ...old,
+            language: 'auto',
+            gradeScale: '10',
+            passMark: 6,
+            weekStartsOn: 1,
+          }
+          if ((state.currentPage as string) === 'ai') state.currentPage = 'piano'
+        }
+        return state as DiaryState
+      },
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<DiaryState>
+        return { ...current, ...p, settings: { ...defaultSettings, ...(p.settings ?? {}) } }
+      },
+    }
   )
 )

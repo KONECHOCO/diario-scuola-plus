@@ -1,34 +1,23 @@
 import { useState } from 'react'
 import { useDiaryStore } from '../store/useDiaryStore'
 import { hapticSuccess } from '../lib/native'
+import { SCALES, SCALE_IDS, scaleRangeLabel } from '../lib/grades'
+import { useT } from '../i18n/useT'
+import type { Key } from '../i18n/core'
 import { GraduationCap, ChevronRight } from 'lucide-react'
-import type { SchoolLevel } from '../types'
+import type { GradeScaleId, SchoolLevel } from '../types'
 
-const STEPS = [
-  {
-    title: 'Benvenuto in Diario Scuola Plus',
-    description: 'Il diario scolastico più completo: orario, voti, compiti, studio e molto altro. Tutto in un\'unica app.',
-    emoji: '🎓',
-  },
-  {
-    title: 'Organizza la tua scuola',
-    description: 'Gestisci orario, compiti, esami e voti. Le medie si calcolano automaticamente.',
-    emoji: '📚',
-  },
-  {
-    title: 'Studia in modo smart',
-    description: 'Pomodoro, flashcards, obiettivi giornalieri e assistente di studio integrato.',
-    emoji: '🧠',
-  },
-  {
-    title: 'Crea il tuo profilo',
-    description: 'Personalizza nome, scuola e classe per iniziare.',
-    emoji: '✨',
-  },
+const STEPS: { title: Key; description: Key; emoji: string }[] = [
+  { title: 'ob1_t', description: 'ob1_d', emoji: '🎓' },
+  { title: 'ob2_t', description: 'ob2_d', emoji: '📚' },
+  { title: 'ob3_t', description: 'ob3_d', emoji: '🧠' },
+  { title: 'ob4_t', description: 'ob4_d', emoji: '✨' },
 ]
+const LEVELS: SchoolLevel[] = ['elementare', 'media', 'superiore', 'universita']
 
 export function Onboarding() {
-  const { updateProfile, profiles, updateSettings } = useDiaryStore()
+  const { updateProfile, profiles, settings, updateSettings } = useDiaryStore()
+  const { t } = useT()
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [school, setSchool] = useState('')
@@ -39,9 +28,9 @@ export function Onboarding() {
     const profile = profiles[0]
     if (profile) {
       updateProfile(profile.id, {
-        name: name || 'Studente',
-        school: school || 'La mia scuola',
-        className: className || '3A',
+        name: name.trim() || t('default_student'),
+        school: school.trim(),
+        className: className.trim(),
         level,
       })
     }
@@ -53,36 +42,46 @@ export function Onboarding() {
   const current = STEPS[step]
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-950 flex flex-col safe-top safe-bottom">
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+    <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-950 flex flex-col safe-top safe-bottom overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 text-center">
         <div className="text-6xl mb-6">{current.emoji}</div>
-        <h1 className="text-2xl font-bold mb-3">{current.title}</h1>
-        <p className="text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">{current.description}</p>
+        <h1 className="text-2xl font-bold mb-3">{t(current.title, { app: t('app_name') })}</h1>
+        <p className="text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">{t(current.description)}</p>
 
         {isLast && (
-          <div className="w-full max-w-sm mt-8 space-y-3 text-left">
+          <div className="w-full max-w-sm mt-8 space-y-3 text-start">
             <div>
-              <label className="label">Il tuo nome</label>
-              <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="es. Marco" autoFocus />
+              <label className="label">{t('your_name')}</label>
+              <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder={t('name_ph')} />
             </div>
             <div>
-              <label className="label">Scuola</label>
-              <input className="input" value={school} onChange={e => setSchool(e.target.value)} placeholder="es. Liceo Scientifico" />
+              <label className="label">{t('school')}</label>
+              <input className="input" value={school} onChange={e => setSchool(e.target.value)} placeholder={t('school_ph')} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Classe</label>
-                <input className="input" value={className} onChange={e => setClassName(e.target.value)} placeholder="es. 3A" />
+                <label className="label">{t('class')}</label>
+                <input className="input" value={className} onChange={e => setClassName(e.target.value)} placeholder={t('class_ph')} />
               </div>
               <div>
-                <label className="label">Livello</label>
+                <label className="label">{t('level')}</label>
                 <select className="input" value={level} onChange={e => setLevel(e.target.value as SchoolLevel)}>
-                  <option value="elementare">Elementare</option>
-                  <option value="media">Media</option>
-                  <option value="superiore">Superiore</option>
-                  <option value="universita">Università</option>
+                  {LEVELS.map(l => <option key={l} value={l}>{t(`lvl_${l}` as Key)}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <label className="label">{t('grade_scale')}</label>
+              <select
+                className="input"
+                value={settings.gradeScale}
+                onChange={e => {
+                  const id = e.target.value as GradeScaleId
+                  updateSettings({ gradeScale: id, passMark: SCALES[id].defaultPass })
+                }}
+              >
+                {SCALE_IDS.map(id => <option key={id} value={id}>{scaleRangeLabel(SCALES[id])}</option>)}
+              </select>
             </div>
           </div>
         )}
@@ -100,15 +99,15 @@ export function Onboarding() {
           className="btn-primary w-full py-3.5 text-base flex items-center justify-center gap-2"
         >
           {isLast ? (
-            <><GraduationCap size={20} /> Inizia!</>
+            <><GraduationCap size={20} /> {t('start_btn')}</>
           ) : (
-            <>Continua <ChevronRight size={18} /></>
+            <>{t('continue')} <ChevronRight size={18} className="rtl:rotate-180" /></>
           )}
         </button>
 
-        {!isLast && step > 0 && (
+        {step > 0 && (
           <button onClick={() => setStep(s => s - 1)} className="w-full text-center text-sm text-gray-400 mt-3 py-2">
-            Indietro
+            {t('back')}
           </button>
         )}
       </div>

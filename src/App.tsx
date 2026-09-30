@@ -4,6 +4,9 @@ import { Onboarding } from './components/Onboarding'
 import { useDiaryStore } from './store/useDiaryStore'
 import { initNativeApp, requestNotificationPermission } from './lib/native'
 import { syncAllNotifications } from './lib/notifications'
+import { applyDocumentLang } from './i18n/core'
+import { useT } from './i18n/useT'
+import { bootstrapAds } from './monetization/ads'
 import { DashboardPage } from './pages/DashboardPage'
 import { OrarioPage } from './pages/OrarioPage'
 import { CompitiPage } from './pages/CompitiPage'
@@ -19,7 +22,7 @@ import { PomodoroPage } from './pages/PomodoroPage'
 import { FlashcardsPage } from './pages/FlashcardsPage'
 import { ObiettiviPage } from './pages/ObiettiviPage'
 import { StatistichePage } from './pages/StatistichePage'
-import { AIPage } from './pages/AIPage'
+import { PianoPage } from './pages/PianoPage'
 import { ImpostazioniPage } from './pages/ImpostazioniPage'
 
 const PAGES = {
@@ -38,16 +41,22 @@ const PAGES = {
   flashcards: FlashcardsPage,
   obiettivi: ObiettiviPage,
   statistiche: StatistichePage,
-  ai: AIPage,
+  piano: PianoPage,
   impostazioni: ImpostazioniPage,
 } as const
 
 function App() {
   const { currentPage, settings, homework, exams } = useDiaryStore()
+  const { lang, t } = useT()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', settings.darkMode)
   }, [settings.darkMode])
+
+  useEffect(() => {
+    applyDocumentLang(lang)
+    document.title = t('app_name')
+  }, [lang, t])
 
   useEffect(() => {
     initNativeApp()
@@ -56,11 +65,17 @@ function App() {
     }
   }, [])
 
+  // Launch video + banner: only once the user is inside the app, never over
+  // the onboarding.
+  useEffect(() => {
+    if (settings.onboardingComplete) void bootstrapAds()
+  }, [settings.onboardingComplete])
+
   useEffect(() => {
     if (settings.notifications && settings.onboardingComplete) {
       syncAllNotifications()
     }
-  }, [homework, exams, settings.notifications, settings.onboardingComplete])
+  }, [homework, exams, settings.notifications, settings.onboardingComplete, lang])
 
   if (!settings.onboardingComplete) {
     return <Onboarding />

@@ -54,6 +54,17 @@ export function ProgressBar({ value, max, color }: { value: number; max: number;
   )
 }
 
+export function Toggle({ on, onClick, label, icon }: { on: boolean; onClick: () => void; label: string; icon?: React.ReactNode }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-start">
+      <span className="flex items-center gap-2 text-sm">{icon}{label}</span>
+      <div className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${on ? 'bg-primary-600' : 'bg-gray-300'}`}>
+        <div className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform mt-0.5 ${on ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0.5 rtl:-translate-x-0.5'}`} />
+      </div>
+    </button>
+  )
+}
+
 export function StatCard({ label, value, sub, icon, color }: {
   label: string
   value: string | number
