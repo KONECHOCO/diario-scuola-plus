@@ -31,7 +31,7 @@ SHORT = {
     'de-DE': 'Stundenplan, Hausaufgaben, Noten, Klassenarbeiten und Lernpläne. Ohne Konto.',
     'es-ES': 'Horario, deberes, notas y media, exámenes y planes de estudio. Sin cuenta.',
     'pt-PT': 'Horário, trabalhos de casa, notas e média, testes e planos de estudo. Sem conta.',
-    'nl-NL': 'Rooster, huiswerk, cijfers en gemiddelde, toetsen en studieplannen. Geen account.',
+    'nl-NL': 'Rooster, huiswerk, cijfers, gemiddelde, toetsen en studieplannen. Geen account.',
     'pl': 'Plan lekcji, zadania domowe, oceny i średnia, sprawdziany i plany nauki.',
     'ro': 'Orar, teme, note și medie, teste și planuri de studiu. Fără cont.',
     'sv': 'Schema, läxor, betyg och snitt, prov och studieplaner. Inget konto behövs.',
@@ -54,8 +54,10 @@ def token(key):
 
 def main():
     key, apply = sys.argv[1], '--apply' in sys.argv
-    H = {'Authorization': 'Bearer ' + token(key)}
     meta = json.loads((ROOT / 'metadata.json').read_text(encoding='utf-8'))
+    too_long = [mk for mk in LOCALES if len(meta[mk]['name']) > 30 or len(SHORT[mk]) > 80 or len(meta[mk]['description']) > 4000]
+    assert not too_long, too_long
+    H ={'Authorization': 'Bearer ' + token(key)}
     e = requests.post(f'{B}/edits', headers=H).json()['id']
     current = {l['language']: l for l in requests.get(f'{B}/edits/{e}/listings', headers=H).json().get('listings', [])}
     for lang, l in current.items():
@@ -67,7 +69,6 @@ def main():
         return
     for mk, (langs, folder) in LOCALES.items():
         m = meta[mk]
-        assert len(m['name']) <= 30 and len(SHORT[mk]) <= 80 and len(m['description']) <= 4000, mk
         for lang in langs:
             body = {'language': lang, 'title': m['name'], 'shortDescription': SHORT[mk], 'fullDescription': m['description']}
             r = requests.put(f'{B}/edits/{e}/listings/{lang}', headers=H, json=body)

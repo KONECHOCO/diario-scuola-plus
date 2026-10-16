@@ -5,6 +5,7 @@ import {
   BannerAdPluginEvents,
   BannerAdPosition,
   BannerAdSize,
+  MaxAdContentRating,
 } from '@capacitor-community/admob'
 import { UnityAds } from 'capacitor-unity-ads'
 import { monetizationConfig } from './config'
@@ -186,7 +187,8 @@ async function initializeAdMob() {
       const { status } = await AdMob.trackingAuthorizationStatus().catch(() => ({ status: 'denied' as const }))
       personalizedAllowed = status === 'authorized'
     }
-    await AdMob.initialize({ initializeForTesting: isTesting })
+    // Students from 13 up: only ads rated for teens (Play Families policy).
+    await AdMob.initialize({ initializeForTesting: isTesting, maxAdContentRating: MaxAdContentRating.Teen })
     await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error) => note('banner no fill', error?.message ?? error?.code))
     await AdMob.addListener(BannerAdPluginEvents.Loaded, () => note('banner loaded'))
     await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
