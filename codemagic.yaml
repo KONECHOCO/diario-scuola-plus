@@ -58,8 +58,8 @@ workflows:
           fi
           BUILD_NUMBER=$((LATEST + 1))
           # Draft releases are not reported by get-latest-build-number, so never go
-          # below a date-based code (yymmddHH).
-          DATE_NUMBER=$(date +%y%m%d%H)
+          # below a date-based code (yy + day of year + HHMM, e.g. 262892040).
+          DATE_NUMBER=$(date -u +%y%j%H%M)
           if [ "$DATE_NUMBER" -gt "$BUILD_NUMBER" ]; then BUILD_NUMBER=$DATE_NUMBER; fi
           echo "Using BUILD_NUMBER=$BUILD_NUMBER"
           sed -i "s/versionCode [0-9]\+/versionCode $BUILD_NUMBER/" android/app/build.gradle
