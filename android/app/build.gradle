@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "2.0"
         // Google Mobile Ads needs an app id at launch; Google's sample id until an
-        // Android AdMob app exists (no banner is requested without DIARIO_ADMOB_BANNER_ID_ANDROID).
+        // AdMob app id comes from ADMOB_APP_ID_ANDROID (codemagic.yaml); the sample id is only for local builds.
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID_ANDROID") ?: "ca-app-pub-3940256099942544~3347511713"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

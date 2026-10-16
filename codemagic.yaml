@@ -14,6 +14,8 @@ workflows:
       vars:
         PACKAGE_NAME: "com.diarioscuolaplus.app"
         GOOGLE_PLAY_TRACK: internal
+        ADMOB_APP_ID_ANDROID: ca-app-pub-1151868778464777~3370534174
+        DIARIO_ADMOB_BANNER_ID_ANDROID: ca-app-pub-1151868778464777/1158294646
       node: 20
       java: 21
     triggering:
@@ -27,9 +29,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      # Ads: Unity video at launch + every 5 min (at a section change). No AdMob
-      # banner on Android until an Android AdMob app/banner exists
-      # (then set DIARIO_ADMOB_BANNER_ID_ANDROID and ADMOB_APP_ID_ANDROID).
+      # Ads: Unity video at launch + every 5 min (at a section change), AdMob banner.
       - name: Build web app
         script: |
           VITE_UNITY_GAME_ID_ANDROID=800360436 \
