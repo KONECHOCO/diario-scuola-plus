@@ -2,11 +2,15 @@
 store/metadata.json, phone/tablet screenshots from store/screenshots-android,
 icon store/play-icon-512.png, feature graphics store/feature-graphic (scripts/play-feature-graphic.mjs).
 
-Usage: python store/play_listing.py <service-account.json> [--apply]
-Without --apply it only prints what is on Play now. With --apply the edit is
-committed with changesNotSentForReview where Play allows it (the app is a draft)."""
+Usage: python store/play_listing.py <service-account.json> [--apply] [--release <versionCode>] [--send]
+Without --apply it only prints what is on Play now. --release also puts that build
+on closed testing with the testers group. --send commits even when Play sends the
+changes for review (otherwise the commit is attempted with changesNotSentForReview)."""
 import json, sys, time, pathlib
 import jwt, requests
+from play_closed_test import NOTES as RELEASE_NOTES
+
+TESTERS_GROUP = 'testers-community@googlegroups.com'
 
 PKG = 'com.diarioscuolaplus.app'
 B = f'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{PKG}'
@@ -52,6 +56,17 @@ def token(key):
     return requests.post('https://oauth2.googleapis.com/token', data={'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer', 'assertion': a}).json()['access_token']
 
 
+def upload(url, headers, data, tries=5):
+    # Image uploads take ~30 min in total; retry dropped connections instead of losing the edit.
+    for i in range(tries):
+        try:
+            return requests.post(url, headers=headers, data=data, timeout=120)
+        except requests.exceptions.ConnectionError as err:
+            print('  retry', i + 1, err.__class__.__name__)
+            time.sleep(5 * (i + 1))
+    return requests.post(url, headers=headers, data=data, timeout=120)
+
+
 def main():
     key, apply = sys.argv[1], '--apply' in sys.argv
     meta = json.loads((ROOT / 'metadata.json').read_text(encoding='utf-8'))
@@ -76,18 +91,31 @@ def main():
             for kind, device in (('phoneScreenshots', 'phone'), ('sevenInchScreenshots', 'tablet'), ('tenInchScreenshots', 'tablet')):
                 requests.delete(f'{B}/edits/{e}/listings/{lang}/{kind}', headers=H)
                 for png in sorted((SHOTS / device / folder).glob('*.png')):
-                    u = requests.post(f'{UP}/edits/{e}/listings/{lang}/{kind}?uploadType=media',
+                    u = upload(f'{UP}/edits/{e}/listings/{lang}/{kind}?uploadType=media',
                                       headers={**H, 'Content-Type': 'image/png'}, data=png.read_bytes())
                     if not u.ok:
                         print('  shot', kind, png.name, u.status_code, u.text[:150])
             for kind, png in (('icon', ROOT / 'play-icon-512.png'), ('featureGraphic', ROOT / 'feature-graphic' / f'{folder}.png')):
                 requests.delete(f'{B}/edits/{e}/listings/{lang}/{kind}', headers=H)
-                u = requests.post(f'{UP}/edits/{e}/listings/{lang}/{kind}?uploadType=media',
+                u = upload(f'{UP}/edits/{e}/listings/{lang}/{kind}?uploadType=media',
                                   headers={**H, 'Content-Type': 'image/png'}, data=png.read_bytes())
                 if not u.ok:
                     print('  ', kind, u.status_code, u.text[:150])
-    # Never sends anything for review: if Play requires that, the edit is left uncommitted.
-    r = requests.post(f'{B}/edits/{e}:commit?changesNotSentForReview=true', headers=H)
+    if '--release' in sys.argv:
+        # Same edit: the build on closed testing (alpha) and its Google Group of testers.
+        vc = sys.argv[sys.argv.index('--release') + 1]
+        # The app has never been published: Play only accepts draft releases, which are
+        # rolled out from Play Console's publishing overview.
+        body = {'track': 'alpha', 'releases': [{'name': f'2.0 ({vc})', 'versionCodes': [vc], 'status': 'draft',
+                                                'releaseNotes': [{'language': k, 'text': v} for k, v in RELEASE_NOTES.items()]}]}
+        r = requests.put(f'{B}/edits/{e}/tracks/alpha', headers=H, json=body)
+        print('alpha', r.status_code, r.text[:300] if not r.ok else 'ok')
+        r = requests.put(f'{B}/edits/{e}/testers/alpha', headers=H, json={'googleGroups': [TESTERS_GROUP]})
+        print('testers', r.status_code, r.text[:300] if not r.ok else 'ok')
+    # This account sends committed changes for review automatically, so a commit
+    # that would do that only happens with --send.
+    send = '--send' in sys.argv
+    r = requests.post(f'{B}/edits/{e}:commit' + ('' if send else '?changesNotSentForReview=true'), headers=H)
     print('commit', r.status_code, r.text[:300])
 
 
