@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useSyncExternalStore } from 'react'
 import { useDiaryStore, localDate } from '../store/useDiaryStore'
-import { LANGS, generateId, type DayOfWeek, type GradeScaleId, type LangCode, type SchoolLevel, type WeekKind } from '../types'
+import { ACCENTS, LANGS, generateId, type Accent, type DayOfWeek, type GradeScaleId, type LangCode, type SchoolLevel, type WeekKind } from '../types'
 import { SCALES, SCALE_IDS, scaleRangeLabel } from '../lib/grades'
 import { anchorFor, weekKindOf } from '../lib/timetable'
 import { requestNotificationPermission, isNative } from '../lib/native'
@@ -12,20 +12,33 @@ import { Toggle } from '../components/ui/Common'
 import { GradeInput, parseGrade } from '../components/ui/GradeInput'
 import { RemoveAdsButton } from '../monetization/RemoveAdsButton'
 import { adsEnabled, showPrivacyOptions } from '../monetization/ads'
-import { Download, Upload, Trash2, User, Bell, Moon, Sun, Shield, FileText, ExternalLink, Globe, GraduationCap, Plus, X } from 'lucide-react'
+import { isPurchased, subscribePremium } from '../monetization/premium'
+import { Download, Upload, Trash2, User, Bell, Moon, Sun, Shield, FileText, ExternalLink, Globe, GraduationCap, Plus, X, Palette, Lock, Sparkles } from 'lucide-react'
 import { addDays, startOfWeek } from 'date-fns'
 
-const APP_VERSION = '2.0'
+const APP_VERSION = '2.1'
 const STORAGE_KEY = 'diario-scuola-plus'
 const LEVELS: SchoolLevel[] = ['elementare', 'media', 'superiore', 'universita']
 // Legal pages are also bundled in the app (public/); in the native app they
 // open in the browser from the GitHub Pages site.
 const SITE = 'https://konechoco.github.io/diario-scuola-plus'
+// Swatches of the 600 shade of each palette in index.css.
+const ACCENT_SWATCH: Record<Accent, string> = {
+  blue: '#2563eb',
+  violet: '#7c3aed',
+  emerald: '#059669',
+  rose: '#e11d48',
+  orange: '#ea580c',
+  teal: '#0d9488',
+}
+// Extra profile avatars unlocked by Pro.
+const PRO_AVATARS = ['🦊', '🐼', '🦄', '🐙', '🦉', '🐯', '👑', '💎', '🔥', '🌈', '🎸', '⚽']
 
 export function ImpostazioniPage() {
   const { settings, updateSettings, profiles, activeProfileId, updateProfile, resetData } = useDiaryStore()
   const { t, fmt, scale, lang } = useT()
   const fileRef = useRef<HTMLInputElement>(null)
+  const pro = useSyncExternalStore(subscribePremium, isPurchased)
   const profile = profiles.find(p => p.id === activeProfileId)
   const [profileForm, setProfileForm] = useState({
     name: profile?.name ?? '',
@@ -118,6 +131,25 @@ export function ImpostazioniPage() {
                 {a}
               </button>
             ))}
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+              <Sparkles size={12} className="text-amber-500" /> {t('avatars_pro')}
+              {!pro && <span className="text-amber-600 flex items-center gap-1">· <Lock size={11} /> {t('theme_locked')}</span>}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {PRO_AVATARS.map(a => (
+                <button
+                  key={a}
+                  type="button"
+                  disabled={!pro}
+                  onClick={() => setProfileForm(f => ({ ...f, avatar: a }))}
+                  className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center ${profileForm.avatar === a ? 'bg-primary-100 ring-2 ring-primary-500' : 'bg-gray-100 dark:bg-gray-800'} ${pro ? '' : 'opacity-40'}`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
@@ -226,6 +258,32 @@ export function ImpostazioniPage() {
             label={t('reminders')}
             icon={<Bell size={18} />}
           />
+        </div>
+        <div className="pt-3 mt-1 border-t border-gray-100 dark:border-gray-800">
+          <p className="text-sm font-medium mb-2 flex items-center gap-2">
+            <Palette size={16} /> {t('theme')}
+            {!pro && <span className="text-xs font-normal text-amber-600 flex items-center gap-1"><Lock size={12} /> {t('theme_locked')}</span>}
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            {ACCENTS.map(accent => {
+              const active = (pro ? settings.accent ?? 'blue' : 'blue') === accent
+              const locked = !pro && accent !== 'blue'
+              return (
+                <button
+                  key={accent}
+                  type="button"
+                  aria-label={accent}
+                  aria-pressed={active}
+                  disabled={locked}
+                  onClick={() => updateSettings({ accent })}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center ${active ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-900' : ''} ${locked ? 'opacity-40' : ''}`}
+                  style={{ backgroundColor: ACCENT_SWATCH[accent] }}
+                >
+                  {locked && <Lock size={14} className="text-white" />}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 

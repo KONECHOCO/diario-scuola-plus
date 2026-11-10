@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { Layout } from './components/Layout'
 import { Onboarding } from './components/Onboarding'
 import { useDiaryStore } from './store/useDiaryStore'
@@ -7,6 +7,7 @@ import { syncAllNotifications } from './lib/notifications'
 import { applyDocumentLang } from './i18n/core'
 import { useT } from './i18n/useT'
 import { bootstrapAds } from './monetization/ads'
+import { isPurchased, subscribePremium } from './monetization/premium'
 import { DashboardPage } from './pages/DashboardPage'
 import { OrarioPage } from './pages/OrarioPage'
 import { CompitiPage } from './pages/CompitiPage'
@@ -52,6 +53,12 @@ function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', settings.darkMode)
   }, [settings.darkMode])
+
+  // Pro color theme; back to the default blue if Pro is gone (refund).
+  const pro = useSyncExternalStore(subscribePremium, isPurchased)
+  useEffect(() => {
+    document.documentElement.dataset.theme = pro && settings.accent ? settings.accent : 'blue'
+  }, [pro, settings.accent])
 
   useEffect(() => {
     applyDocumentLang(lang)

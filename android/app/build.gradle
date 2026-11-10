@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "2.0"
+        versionName "2.1"
         // Google Mobile Ads needs an app id at launch; Google's sample id until an
         // AdMob app id comes from ADMOB_APP_ID_ANDROID (codemagic.yaml); the sample id is only for local builds.
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID_ANDROID") ?: "ca-app-pub-3940256099942544~3347511713"]
@@ -31,6 +31,10 @@ android {
         }
     }
     buildTypes {
+        // Debug builds install next to the Play version (test ads, Google sample AdMob app id).
+        debug {
+            applicationIdSuffix ".debug"
+        }
         release {
             signingConfig signingConfigs.release
             minifyEnabled false

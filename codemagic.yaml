@@ -16,7 +16,7 @@ workflows:
         GOOGLE_PLAY_TRACK: internal
         ADMOB_APP_ID_ANDROID: ca-app-pub-1151868778464777~3370534174
         DIARIO_ADMOB_BANNER_ID_ANDROID: ca-app-pub-1151868778464777/1158294646
-      node: 20
+      node: 22
       java: 21
     triggering:
       events:
@@ -29,13 +29,14 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      # Ads: Unity video at launch + every 5 min (at a section change), AdMob banner.
+      # Ads (AdMob only): App Open at launch / on return, interstitial every 2 sections
+      # (45 s apart), banner, rewarded video. See src/monetization/ads.ts.
       - name: Build web app
         script: |
-          VITE_UNITY_GAME_ID_ANDROID=800360436 \
-          VITE_UNITY_INTERSTITIAL_PLACEMENT_ID_ANDROID=Interstitial_Android \
-          VITE_UNITY_REWARDED_PLACEMENT_ID_ANDROID=Rewarded_Android \
           VITE_ADMOB_BANNER_ID_ANDROID="${DIARIO_ADMOB_BANNER_ID_ANDROID:-}" \
+          VITE_ADMOB_APP_OPEN_ID_ANDROID=ca-app-pub-1151868778464777/8110016079 \
+          VITE_ADMOB_INTERSTITIAL_ID_ANDROID=ca-app-pub-1151868778464777/1343308074 \
+          VITE_ADMOB_REWARDED_ID_ANDROID=ca-app-pub-1151868778464777/5379910954 \
           VITE_ADS_TEST_MODE=false \
           npm run build
       - name: Generate icons and splash
@@ -100,7 +101,7 @@ workflows:
         XCODE_SCHEME: "App"
         APP_STORE_APPLE_ID: "6790534929"
         BUNDLE_ID: "com.diarioscuolaplus.app"
-      node: 20
+      node: 22
       xcode: latest
       cocoapods: default
     triggering:
@@ -114,32 +115,23 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm ci
-      # Ads: Unity video at launch + every 5 min (at a section change), AdMob banner.
+      # Ads (AdMob only): App Open at launch / on return, interstitial every 2 sections
+      # (45 s apart), banner, rewarded video. See src/monetization/ads.ts.
       - name: Build web app (ads + IAP)
         script: |
-          VITE_UNITY_GAME_ID_IOS=800360437 \
-          VITE_UNITY_INTERSTITIAL_PLACEMENT_ID_IOS=Interstitial_iOS \
-          VITE_UNITY_REWARDED_PLACEMENT_ID_IOS=Rewarded_iOS \
           VITE_ADMOB_BANNER_ID_IOS="${DIARIO_ADMOB_BANNER_ID:-}" \
+          VITE_ADMOB_APP_OPEN_ID_IOS=ca-app-pub-1151868778464777/1698531293 \
+          VITE_ADMOB_INTERSTITIAL_ID_IOS="${DIARIO_ADMOB_INTERSTITIAL_ID:-ca-app-pub-1151868778464777/6955549876}" \
+          VITE_ADMOB_REWARDED_ID_IOS=ca-app-pub-1151868778464777/2919279477 \
           VITE_ADS_TEST_MODE=false \
           npm run build
       - name: Add iOS platform if missing
         script: |
           if [ ! -d "ios/App" ]; then
-            # `cap add ios` scaffolds the project (incl. Podfile) then runs an
-            # internal `pod install`, which fails here because UnityAds ships
-            # a static xcframework and Capacitor's default Podfile uses
-            # dynamic `use_frameworks!`. Scaffolding still completes before
-            # the pod-install sub-step, so we tolerate this specific failure
-            # and fix linkage in the next step before pods are (re)installed.
-            npx cap add ios || echo "cap add ios: ignoring known pod-install failure (static UnityAds xcframework), Podfile will be patched next"
+            npx cap add ios --packagemanager CocoaPods
           fi
-      - name: Patch Podfile for Unity Ads static linkage
+      - name: Podfile platform (iOS 15 for Capacitor 8 / native-purchases)
         script: |
-          if ! grep -q ":linkage => :static" ios/App/Podfile; then
-            sed -i '' "s/^use_frameworks!$/use_frameworks! :linkage => :static/" ios/App/Podfile
-          fi
-          # @capgo/native-purchases needs iOS 15
           sed -i '' "s/^platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
           grep "platform :ios" ios/App/Podfile
       - name: Localize iOS project (16 languages)
@@ -167,7 +159,7 @@ workflows:
           fi
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.0" ios/App/App/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1" ios/App/App/Info.plist 2>/dev/null || true
       - name: Verify iOS bundle identifier
         script: |
           DETECTED=$(xcode-project detect-bundle-id --project ios/App/App.xcodeproj)

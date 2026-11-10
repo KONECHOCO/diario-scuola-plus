@@ -368,8 +368,8 @@ const it = {
   reset_help: "Elimina tutti i dati. L'operazione non si può annullare.",
   reset: 'Elimina tutti i dati',
   reset_confirm: 'Sei sicuro? Tutti i dati verranno eliminati.',
-  pro_title: 'Senza pubblicità',
-  pro_desc: 'Un solo acquisto, per sempre: niente video né banner.',
+  pro_title: "Passa a Pro e sostieni il progetto",
+  pro_desc: "Diario Scuola Plus è creato da uno sviluppatore indipendente. Con Pro sostieni lo sviluppo e ottieni di più: un solo acquisto, per sempre.",
   version_n: 'Versione {v}',
 
   // onboarding
@@ -387,14 +387,21 @@ const it = {
   start_btn: 'Inizia!',
 
   // remove ads
-  ads_buy: 'Rimuovi la pubblicità',
+  ads_buy: "Passa a Pro",
   ads_watch: 'Guarda un video: 30 min senza pubblicità',
   ads_until: 'Senza pubblicità fino alle {time}',
   ads_restore: 'Ripristina acquisti',
-  ads_owned: 'Senza pubblicità — grazie!',
+  ads_owned: "Pro attivo — grazie per il sostegno!",
   ads_not_found: 'Nessun acquisto da ripristinare.',
   ads_failed: 'Acquisto non riuscito. Riprova.',
   ads_no_video: 'Nessun video disponibile ora, riprova tra poco.',
+  pro_perk_ads: "Nessuna pubblicità: niente video né banner",
+  pro_perk_themes: "6 temi colore per personalizzare l’app",
+  pro_perk_avatars: "Avatar esclusivi per il profilo",
+  pro_perk_support: "Contribuisci ai prossimi aggiornamenti",
+  theme: "Tema colore",
+  theme_locked: "Disponibile con Pro",
+  avatars_pro: "Avatar Pro",
 
   // notifications
   notif_hw: 'Compito in scadenza 📚',

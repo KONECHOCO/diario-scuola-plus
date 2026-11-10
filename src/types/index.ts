@@ -173,8 +173,14 @@ export interface Period {
   start: string
 }
 
+/** Accent palettes defined in index.css. Anything but 'blue' needs Pro. */
+export const ACCENTS = ['blue', 'violet', 'emerald', 'rose', 'orange', 'teal'] as const
+export type Accent = (typeof ACCENTS)[number]
+
 export interface AppSettings {
   darkMode: boolean
+  /** Pro color theme. */
+  accent?: Accent
   notifications: boolean
   gradeScale: GradeScaleId
   passMark: number

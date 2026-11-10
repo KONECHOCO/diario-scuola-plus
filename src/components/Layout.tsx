@@ -20,8 +20,8 @@ export function Layout({ children }: LayoutProps) {
   const mainRef = useRef<HTMLElement>(null)
   const firstPage = useRef(true)
 
-  // Section change: back to the top, and the paced interstitial (at most one
-  // every 5 minutes, see monetization/ads.ts).
+  // Section change: back to the top, and the paced interstitial (every 2
+  // section changes, at least 45 s apart, see monetization/ads.ts).
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
     if (firstPage.current) {

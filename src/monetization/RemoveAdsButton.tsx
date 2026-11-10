@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Ban, Heart, Palette, Smile, Sparkles } from 'lucide-react'
 import { useT } from '../i18n/useT'
+import type { Key } from '../i18n/core'
 import { getAdsDiagnostics, rewardedEnabled, showRewardedForAdFree } from './ads'
 import {
   getAdFreeUntil,
@@ -13,9 +14,17 @@ import {
   subscribePremium,
 } from './premium'
 
+const PERKS: { key: Key; icon: typeof Ban }[] = [
+  { key: 'pro_perk_ads', icon: Ban },
+  { key: 'pro_perk_themes', icon: Palette },
+  { key: 'pro_perk_avatars', icon: Smile },
+  { key: 'pro_perk_support', icon: Heart },
+]
+
 /**
- * "Remove ads" purchase, "Restore purchases" (required by App Review) and the
- * opt-in rewarded video for a temporary ad-free window.
+ * Pro purchase (one-time: no ads + color themes + extra avatars),
+ * "Restore purchases" (required by App Review) and the opt-in rewarded video
+ * for a temporary ad-free window.
  * `card` renders the full promo card (dashboard, settings).
  */
 export function RemoveAdsButton({ card = false }: { card?: boolean }) {
@@ -102,6 +111,14 @@ export function RemoveAdsButton({ card = false }: { card?: boolean }) {
           <p className="text-sm text-gray-500 dark:text-gray-400">{t('pro_desc')}</p>
         </div>
       </div>
+      <ul className="space-y-1.5 mb-4 text-sm">
+        {PERKS.map(({ key, icon: Icon }) => (
+          <li key={key} className="flex items-center gap-2">
+            <Icon size={16} className="text-amber-500 flex-shrink-0" />
+            <span>{t(key)}</span>
+          </li>
+        ))}
+      </ul>
       {buttons}
     </div>
   )
