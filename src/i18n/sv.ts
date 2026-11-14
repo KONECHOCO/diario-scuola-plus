@@ -354,6 +354,17 @@ const sv: Dict = {
   pro_desc: "Appen görs av en oberoende utvecklare. Med Pro stöder du utvecklingen och får mer: ett köp, för alltid.",
   version_n: 'Version {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Har du en inbjudningskod?",
+  ref_title: "Inbjudningskod",
+  ref_placeholder: "T.ex. AMADOU123",
+  ref_apply: "Använd",
+  ref_applied: "Inbjudningskod tillämpad:",
+  ref_invalid: "Ogiltig kod. Kontrollera och försök igen.",
+  ref_network: "Ingen anslutning. Försök igen om en stund.",
+  ref_expired: "En inbjudningskod kan bara anges inom 7 dagar efter installationen.",
+  ref_hint: "Om någon har rekommenderat appen till dig, ange personens kod: för dig ändras ingenting och vi samlar inte in några personuppgifter.",
+
   ob1_t: 'Välkommen till {app}',
   ob1_d: 'Den kompletta skolplaneraren: schema, betyg, läxor, plugg och mycket mer i en app.',
   ob2_t: 'Organisera skolan',

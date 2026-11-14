@@ -354,6 +354,17 @@ const fr: Dict = {
   pro_desc: "Agenda Scolaire Plus est créé par un développeur indépendant. Avec Pro, vous soutenez son développement et obtenez plus : un seul achat, pour toujours.",
   version_n: 'Version {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Tu as un code d’invitation ?",
+  ref_title: "Code d’invitation",
+  ref_placeholder: "Ex. AMADOU123",
+  ref_apply: "Valider",
+  ref_applied: "Code d’invitation appliqué :",
+  ref_invalid: "Code invalide. Vérifie et réessaie.",
+  ref_network: "Pas de connexion. Réessaie dans un instant.",
+  ref_expired: "Le code d’invitation ne peut être saisi que dans les 7 jours suivant l’installation.",
+  ref_hint: "Si quelqu’un t’a recommandé l’appli, saisis son code : rien ne change pour toi et nous ne collectons aucune donnée personnelle.",
+
   ob1_t: 'Bienvenue dans {app}',
   ob1_d: "L'agenda scolaire complet : emploi du temps, notes, devoirs, révisions et bien plus, dans une seule app.",
   ob2_t: 'Organise ta scolarité',

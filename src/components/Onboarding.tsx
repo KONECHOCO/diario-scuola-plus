@@ -6,6 +6,7 @@ import { useT } from '../i18n/useT'
 import type { Key } from '../i18n/core'
 import { GraduationCap, ChevronRight } from 'lucide-react'
 import type { GradeScaleId, SchoolLevel } from '../types'
+import { ReferralCodeForm } from '../referral/ReferralCodeForm'
 
 const STEPS: { title: Key; description: Key; emoji: string }[] = [
   { title: 'ob1_t', description: 'ob1_d', emoji: '🎓' },
@@ -83,6 +84,7 @@ export function Onboarding() {
                 {SCALE_IDS.map(id => <option key={id} value={id}>{scaleRangeLabel(SCALES[id])}</option>)}
               </select>
             </div>
+            <ReferralCodeForm compact />
           </div>
         )}
       </div>

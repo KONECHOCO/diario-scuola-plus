@@ -354,6 +354,17 @@ const tr: Dict = {
   pro_desc: "Uygulama bağımsız bir geliştirici tarafından yapılıyor. Pro ile geliştirmeyi desteklersin ve daha fazlasını alırsın: tek seferlik satın alma, sonsuza dek.",
   version_n: 'Sürüm {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Davet kodun var mı?",
+  ref_title: "Davet kodu",
+  ref_placeholder: "Örn. AMADOU123",
+  ref_apply: "Uygula",
+  ref_applied: "Davet kodu uygulandı:",
+  ref_invalid: "Geçersiz kod. Kontrol edip tekrar dene.",
+  ref_network: "Bağlantı yok. Birazdan tekrar dene.",
+  ref_expired: "Davet kodu yalnızca kurulumdan sonraki 7 gün içinde girilebilir.",
+  ref_hint: "Uygulamayı sana biri önerdiyse onun kodunu gir: senin için hiçbir şey değişmez ve kişisel veri toplamayız.",
+
   ob1_t: '{app} uygulamasına hoş geldin',
   ob1_d: 'Eksiksiz okul ajandası: ders programı, notlar, ödevler, çalışma ve çok daha fazlası tek uygulamada.',
   ob2_t: 'Okulunu düzenle',

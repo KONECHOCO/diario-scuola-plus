@@ -354,6 +354,17 @@ const zh: Dict = {
   pro_desc: "本应用由独立开发者制作。升级 Pro 即可支持开发并获得更多功能：一次购买，永久有效。",
   version_n: '版本 {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "有邀请码吗？",
+  ref_title: "邀请码",
+  ref_placeholder: "例如 AMADOU123",
+  ref_apply: "使用",
+  ref_applied: "已使用邀请码：",
+  ref_invalid: "邀请码无效，请检查后重试。",
+  ref_network: "无网络连接，请稍后重试。",
+  ref_expired: "邀请码只能在安装后 7 天内输入。",
+  ref_hint: "如果有人向你推荐了这款应用，请输入他的邀请码：对你没有任何影响，我们也不会收集个人数据。",
+
   ob1_t: '欢迎使用{app}',
   ob1_d: '功能齐全的学习手帐：课程表、成绩、作业、学习等等，尽在一个应用。',
   ob2_t: '安排好学习生活',

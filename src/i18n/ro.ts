@@ -354,6 +354,17 @@ const ro: Dict = {
   pro_desc: "Aplicația este creată de un dezvoltator independent. Cu Pro susții dezvoltarea și primești mai mult: o singură achiziție, pentru totdeauna.",
   version_n: 'Versiunea {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Ai un cod de invitație?",
+  ref_title: "Cod de invitație",
+  ref_placeholder: "Ex. AMADOU123",
+  ref_apply: "Aplică",
+  ref_applied: "Cod de invitație aplicat:",
+  ref_invalid: "Cod invalid. Verifică și încearcă din nou.",
+  ref_network: "Fără conexiune. Încearcă din nou în curând.",
+  ref_expired: "Codul de invitație poate fi introdus doar în primele 7 zile de la instalare.",
+  ref_hint: "Dacă cineva ți-a recomandat aplicația, introdu codul său: pentru tine nu se schimbă nimic și nu colectăm date personale.",
+
   ob1_t: 'Bine ai venit în {app}',
   ob1_d: 'Agenda școlară completă: orar, note, teme, studiu și multe altele, într-o singură aplicație.',
   ob2_t: 'Organizează școala',

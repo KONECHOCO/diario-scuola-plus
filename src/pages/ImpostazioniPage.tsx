@@ -13,10 +13,19 @@ import { GradeInput, parseGrade } from '../components/ui/GradeInput'
 import { RemoveAdsButton } from '../monetization/RemoveAdsButton'
 import { adsEnabled, showPrivacyOptions } from '../monetization/ads'
 import { isPurchased, subscribePremium } from '../monetization/premium'
+import { ReferralCodeForm } from '../referral/ReferralCodeForm'
+import { useReferral, canEnterCode } from '../referral'
+
+/** Card wrapper so an empty form does not leave an empty card behind. */
+function ReferralCard() {
+  const ref = useReferral()
+  if (!ref.enabled || (!ref.code && !canEnterCode(ref))) return null
+  return <div className="card"><ReferralCodeForm /></div>
+}
 import { Download, Upload, Trash2, User, Bell, Moon, Sun, Shield, FileText, ExternalLink, Globe, GraduationCap, Plus, X, Palette, Lock, Sparkles } from 'lucide-react'
 import { addDays, startOfWeek } from 'date-fns'
 
-const APP_VERSION = '2.1'
+const APP_VERSION = '2.2'
 const STORAGE_KEY = 'diario-scuola-plus'
 const LEVELS: SchoolLevel[] = ['elementare', 'media', 'superiore', 'universita']
 // Legal pages are also bundled in the app (public/); in the native app they
@@ -109,6 +118,8 @@ export function ImpostazioniPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <RemoveAdsButton card />
+
+      <ReferralCard />
 
       <div className="card">
         <h3 className="font-semibold flex items-center gap-2 mb-4"><Globe size={18} /> {t('language')}</h3>

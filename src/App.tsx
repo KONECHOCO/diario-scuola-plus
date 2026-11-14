@@ -7,6 +7,7 @@ import { syncAllNotifications } from './lib/notifications'
 import { applyDocumentLang } from './i18n/core'
 import { useT } from './i18n/useT'
 import { bootstrapAds } from './monetization/ads'
+import { initReferral } from './referral'
 import { isPurchased, subscribePremium } from './monetization/premium'
 import { DashboardPage } from './pages/DashboardPage'
 import { OrarioPage } from './pages/OrarioPage'
@@ -70,6 +71,11 @@ function App() {
     if (settings.notifications) {
       requestNotificationPermission().then(() => syncAllNotifications())
     }
+  }, [])
+
+  // Ambassador program: sends data only for users who came from an invitation.
+  useEffect(() => {
+    void initReferral()
   }, [])
 
   // Launch video + banner: only once the user is inside the app, never over

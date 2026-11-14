@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import { NativePurchases, PURCHASE_TYPE, type Transaction } from '@capgo/native-purchases'
 import { monetizationConfig } from './config'
+import { trackPurchase } from '../referral'
 
 // Ad-free state:
 //  - purchased: "Remove ads" one-time purchase. Cached in localStorage so
@@ -70,7 +71,10 @@ export async function purchaseRemoveAds() {
     isConsumable: false,
     autoAcknowledgePurchases: true,
   })
-  if (isValid(transaction)) setPurchased(true)
+  if (isValid(transaction)) {
+    setPurchased(true)
+    trackPurchase()
+  }
   return purchased
 }
 

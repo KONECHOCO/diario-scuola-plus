@@ -12,6 +12,7 @@ import {
   RewardAdPluginEvents,
 } from '@capacitor-community/admob'
 import { monetizationConfig } from './config'
+import { attachAdMobListeners } from '../referral'
 import {
   grantTemporaryAdFree,
   isAdFree,
@@ -238,6 +239,8 @@ async function initializeAdMob() {
       AdMob.initialize({ initializeForTesting: isTesting, maxAdContentRating: MaxAdContentRating.Teen }),
       SDK_INIT_TIMEOUT_MS,
     )
+    // Ambassador program: counts ads seen by invited users (no-op for everyone else).
+    attachAdMobListeners(AdMob, { BannerAdPluginEvents, AppOpenAdPluginEvents, InterstitialAdPluginEvents, RewardAdPluginEvents })
     await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error) => note('banner no fill', error?.message ?? error?.code))
     await AdMob.addListener(BannerAdPluginEvents.Loaded, () => note('banner loaded'))
     await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {

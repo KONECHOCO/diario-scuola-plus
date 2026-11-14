@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "2.1"
+        versionName "2.2"
         // Google Mobile Ads needs an app id at launch; Google's sample id until an
         // AdMob app id comes from ADMOB_APP_ID_ANDROID (codemagic.yaml); the sample id is only for local builds.
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID_ANDROID") ?: "ca-app-pub-3940256099942544~3347511713"]
@@ -55,6 +55,8 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Play Install Referrer: attributes installs that came from an ambassador's invitation link
+    implementation "com.android.installreferrer:installreferrer:2.2"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

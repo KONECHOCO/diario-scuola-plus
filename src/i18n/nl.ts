@@ -354,6 +354,17 @@ const nl: Dict = {
   pro_desc: "De app wordt gemaakt door een onafhankelijke ontwikkelaar. Met Pro steun je de ontwikkeling en krijg je meer: één aankoop, voor altijd.",
   version_n: 'Versie {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Heb je een uitnodigingscode?",
+  ref_title: "Uitnodigingscode",
+  ref_placeholder: "Bijv. AMADOU123",
+  ref_apply: "Toepassen",
+  ref_applied: "Uitnodigingscode toegepast:",
+  ref_invalid: "Ongeldige code. Controleer en probeer opnieuw.",
+  ref_network: "Geen verbinding. Probeer het zo opnieuw.",
+  ref_expired: "Een uitnodigingscode kan alleen binnen 7 dagen na installatie worden ingevoerd.",
+  ref_hint: "Heeft iemand je de app aangeraden? Voer dan zijn of haar code in: voor jou verandert er niets en we verzamelen geen persoonsgegevens.",
+
   ob1_t: 'Welkom bij {app}',
   ob1_d: 'De complete schoolagenda: rooster, cijfers, huiswerk, leren en nog veel meer, in één app.',
   ob2_t: 'Organiseer school',

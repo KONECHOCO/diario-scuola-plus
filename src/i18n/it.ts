@@ -372,6 +372,17 @@ const it = {
   pro_desc: "Diario Scuola Plus è creato da uno sviluppatore indipendente. Con Pro sostieni lo sviluppo e ottieni di più: un solo acquisto, per sempre.",
   version_n: 'Versione {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Hai un codice invito?",
+  ref_title: "Codice invito",
+  ref_placeholder: "Es. AMADOU123",
+  ref_apply: "Applica",
+  ref_applied: "Codice invito applicato:",
+  ref_invalid: "Codice non valido. Controlla e riprova.",
+  ref_network: "Connessione assente. Riprova tra poco.",
+  ref_expired: "Il codice invito si può inserire solo nei primi 7 giorni dall’installazione.",
+  ref_hint: "Se qualcuno ti ha consigliato l’app, inserisci il suo codice: per te non cambia nulla e non raccogliamo dati personali.",
+
   // onboarding
   ob1_t: 'Benvenuto in {app}',
   ob1_d: "Il diario scolastico completo: orario, voti, compiti, studio e molto altro, in un'unica app.",

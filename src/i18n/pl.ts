@@ -354,6 +354,17 @@ const pl: Dict = {
   pro_desc: "Aplikację tworzy niezależny programista. Z Pro wspierasz jej rozwój i dostajesz więcej: jeden zakup, na zawsze.",
   version_n: 'Wersja {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Masz kod zaproszenia?",
+  ref_title: "Kod zaproszenia",
+  ref_placeholder: "Np. AMADOU123",
+  ref_apply: "Zastosuj",
+  ref_applied: "Zastosowano kod zaproszenia:",
+  ref_invalid: "Nieprawidłowy kod. Sprawdź i spróbuj ponownie.",
+  ref_network: "Brak połączenia. Spróbuj ponownie za chwilę.",
+  ref_expired: "Kod zaproszenia można wpisać tylko w ciągu 7 dni od instalacji.",
+  ref_hint: "Jeśli ktoś polecił ci tę aplikację, wpisz jego kod: dla ciebie nic się nie zmienia, a my nie zbieramy danych osobowych.",
+
   ob1_t: 'Witaj w {app}',
   ob1_d: 'Kompletny dziennik ucznia: plan lekcji, oceny, zadania, nauka i wiele więcej w jednej aplikacji.',
   ob2_t: 'Zorganizuj szkołę',

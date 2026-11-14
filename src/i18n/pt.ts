@@ -354,6 +354,17 @@ const pt: Dict = {
   pro_desc: "A app é criada por um programador independente. Com o Pro apoia o desenvolvimento e recebe mais: uma só compra, para sempre.",
   version_n: 'Versão {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Tem um código de convite?",
+  ref_title: "Código de convite",
+  ref_placeholder: "Ex. AMADOU123",
+  ref_apply: "Aplicar",
+  ref_applied: "Código de convite aplicado:",
+  ref_invalid: "Código inválido. Verifique e tente novamente.",
+  ref_network: "Sem ligação. Tente novamente daqui a pouco.",
+  ref_expired: "O código de convite só pode ser introduzido nos primeiros 7 dias após a instalação.",
+  ref_hint: "Se alguém lhe recomendou a app, introduza o código dessa pessoa: para si nada muda e não recolhemos dados pessoais.",
+
   ob1_t: 'Bem-vindo à {app}',
   ob1_d: 'A agenda escolar completa: horário, notas, trabalhos, estudo e muito mais, numa só app.',
   ob2_t: 'Organiza a escola',

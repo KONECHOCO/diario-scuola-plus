@@ -354,6 +354,17 @@ const de: Dict = {
   pro_desc: "Die App wird von einem unabhängigen Entwickler gemacht. Mit Pro unterstützt du die Entwicklung und bekommst mehr: ein Kauf, für immer.",
   version_n: 'Version {v}',
 
+  // referral (programma ambasciatori)
+  ref_question: "Hast du einen Einladungscode?",
+  ref_title: "Einladungscode",
+  ref_placeholder: "z. B. AMADOU123",
+  ref_apply: "Einlösen",
+  ref_applied: "Einladungscode eingelöst:",
+  ref_invalid: "Ungültiger Code. Bitte prüfen und erneut versuchen.",
+  ref_network: "Keine Verbindung. Bitte gleich erneut versuchen.",
+  ref_expired: "Ein Einladungscode kann nur in den ersten 7 Tagen nach der Installation eingegeben werden.",
+  ref_hint: "Wenn dir jemand die App empfohlen hat, gib seinen Code ein: Für dich ändert sich nichts und wir erfassen keine persönlichen Daten.",
+
   ob1_t: 'Willkommen bei {app}',
   ob1_d: 'Der komplette Schulplaner: Stundenplan, Noten, Hausaufgaben, Lernen und vieles mehr – in einer App.',
   ob2_t: 'Organisiere die Schule',
